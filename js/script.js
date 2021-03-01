@@ -2,10 +2,31 @@
 
 // alert("To view the map, turn on your device's location settings");
 
+// CREATE DROPDOWN FROM SELECT2 PLUGIN
+$(document).ready(function() {
+    $('.js-example-basic-single').select2();
+});
+
+// GLOBAL LAYER GROUPS
+var earthquakeMag = new L.layerGroup();
+var faults  = new L.layerGroup();
+
+// LOADING SYMBOL ON PAGE LOAD
+showLoading();
+// CALL INITIAL DATA FOR COUNTRY DROPDOWN AND GLOBAL LAYERS
+getDropdownData(earthquakeMag, faults);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// LEAFLET MAPS
+//  ****   LEAFLET LAYERS, BUTTONS AND CONTROLS   ****
 
+// FUNC TO PLACE LEAFLET BUTTONS
+function CheckScreenSize() {
+    return 'bottomleft';
+};
+
+// BASEMAPS
 // NORMAL MAP VIEW
 var CartoDB_Voyager = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
     id: 'og',
@@ -14,7 +35,6 @@ var CartoDB_Voyager = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles
     minZoom: 3,
     maxZoom: 19
 });
-
 // DARK MAP VIEW
 var CartoDB_DarkMatter = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
 	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
@@ -23,647 +43,494 @@ var CartoDB_DarkMatter = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all
     maxZoom: 19
 });
 
-// TOGGLE BETWEEN THE TWO
-// no point in adding unless grouplayer plugin works
-// takes up too much vh
 
-// var baseMaps = {
-//     "Light Theme": CartoDB_Voyager,
-//     "Dark Theme": CartoDB_DarkMatter
-// };
+// MORE LAYERS
+// LANDMARKS
+var landmarks = L.markerClusterGroup({
+    maxClusterRadius: 150,
+    spiderLegPolylineOptions:  {
+        weight: 1.5, color: 'grey', opacity: 0.5 
+    },
+    spiderfyOnMaxZoom: false,
+    disableClusteringAtZoom: 11
+});
+// LANDMARK MARKER ONCLICK EVENT
+landmarks.on('click', function (e) {
+	// console.log(e);
+    // GET UNIQUE OPENTRIPMAP CODE
+    var code = e.sourceTarget.options.icon.options.id[0];
+    // GET NAME
+    var name = e.sourceTarget.options.icon.options.id[1];
+    // CALL SERVER TO RETURN DETAILED LANDMARK INFO
+    $.ajax({
+        url:"php/getApis.php",
+        type: 'POST',
+        data: {
+            landmark: code,
+        },
+        success: function(result) {
+            // console.log(result);
+            // MODAL TITLE
+            $('#landmarkName').html(name);
+            // MODAL BODY
+            // LANDMARK IMG, WIKI EXTRACT AND LINK
+            $('#cityBody').append(`
+                <div class="container">
+                    <div class="row p-1 justify-content-center">
+                        <span><img style="height: 200px; border: 2px solid white;" class="featureImg" src="${result.preview.source}"></span>
+                    </div>
+                    <div class="row justify-content-center">
+                        <h6>From Wikipedia:</h6>
+                        <span class="featureDesc">${result.wikipedia_extracts.html}</span>
+                    </div>
+                    <div class="row justify-content-center">
+                        <p>Wikipedia Link: </p>
+                        <span class="featureLink"><a target="_blank"href="${result.wikipedia}">${name}<a/></span>
+                    </div>
+                </div>`
+            );
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.log('landmark error')
+        }
+    });
+
+
+    $('#cityBody').empty();
+
+// // open modal
+    $('#modalCity').modal('show');
+
+});
+
+// CITIES
+var cityLayer = new L.featureGroup().on('click', function(e) {
+    // CLEAR LANDMARKS LAYER
+    landmarks.clearLayers();
+    // GO TO CITY
+    mymap.flyTo([e.latlng.lat,e.latlng.lng], 10);
+    // console.log(e);
+    // console.log(e.latlng.lng);
+    // CALL SERVER TO RETURN ALL LANDMARKS IN CITY AREA
+    $.ajax({
+        url:"php/getApis.php",
+        type: 'POST',
+        data: {
+            cityLat: e.latlng.lat,
+            cityLng: e.latlng.lng,
+        },
+        success: function(result) {
+            // console.log(result);
+            // SPLIT RESULT INTO CATEGORIES
+            var historic = result.historic;
+            var natural = result.natural;
+            var religious = result.religious;
+            var other = result.other;
+            // CALL FUNC TO ADD CUSTOM CATEGORY MARKER
+            addMarkerToLandmarks(historic, '<i class="fas fa-monument" style="color: red;"></i>');
+            addMarkerToLandmarks(natural, '<i class="fas fa-tree" style="color: green;"></i>');
+            addMarkerToLandmarks(religious, '<i class="fas fa-place-of-worship" style="color: blue;"></i>');
+            addMarkerToLandmarks(other, '<i class="fas fa-landmark" style="color: black;"></i>');
+
+            // FUNC GIVES EACH CATEGORY A CUSTOM MARKER
+            function addMarkerToLandmarks(category, symbol) {
+                // SET MARKER
+                $.each(category, function() {
+                    // ICON
+                    var landmarkIcon = L.divIcon({
+                        html: `${symbol}`,
+                        iconSize: [10, 10],
+                        iconAnchor: [5, 10],
+                        popupAnchor: [15, -10],
+                        className: 'landmarkIcon',
+                        id: [this.properties.xid, this.properties.name]
+                    });
+
+                    var lat = this.geometry.coordinates[1];
+                    var lng = this.geometry.coordinates[0];
+            
+                    var marker = L.marker([lat, lng], {icon: landmarkIcon})
+                
+                    // ADD TO LANDMARKS LAYER
+                    marker.addTo(landmarks);
+                });
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.log('city layer error')
+        }
+    });
+});
+
+// WEBCAMS
+var webcamLayer = new L.featureGroup().on('click', function (e) {
+    // console.log(e);
+    // GET DATA FROM MARKER ID
+    var id = e.layer.options.icon.options.id;
+    var idSliced = id.slice(0, 2);
+    var idJoined = idSliced.join(', ')
+
+    // TITLE
+    $('#webcamName').html(idJoined);
+    // VIDEO
+    $('#webcamVid').attr("src", id[4]);
+    // LINK
+    if (id[3] != undefined) {
+        $('#webcamWiki').html(`<a href="${id[3]}">${id[3]}</a>`);
+    } else {
+        $('#webcamWiki').html('No Wikipedia Page Available');
+    }
+    // OPEN MODAL
+    $('#modalWebcam').modal('show');
+});
+
+//  EVEN MORE LAYERS
+var weatherLayer = new L.LayerGroup();
+var airportLayer = new L.LayerGroup();
+var popLayer = new L.LayerGroup();
 
 // CREATING MYMAP VARIABLE
 var mymap = L.map('map', {
     // attributionControl: false,
-    layers: [CartoDB_Voyager]
+    layers: [CartoDB_Voyager, weatherLayer], // LAYERS ON MAP LOAD
+    zoomControl: false,
 });
 
+// LAYER CONTROL CATEGORIES
+var basemaps = {
+    "Light": CartoDB_Voyager,
+    "Dark": CartoDB_DarkMatter,
+}
+var overlayMaps = {
+    // City Layers
+    "<b>Largest Cities</b>": {
+        [`Weather`]: weatherLayer,
+        [`Population <i class="far fa-circle" style="color: black;background-color: #ff00009e;border-radius: 100px;"></i>`]: popLayer,
+        [`Landmarks <i class="fas fa-city" style="opacity: 0.8; color: white; text-shadow: 0 0 5px #2b36e8;""></i>`]: cityLayer,
+    },
+    "<b>Other</b>": {
+        [`Popular Webcams <i class="fas fa-video" style="height: 10px;width: 10px; color: #2b36e8; text-shadow: 0 0 5px #2b36e8;"></i>`]: webcamLayer,
+        [`Airports <i class="fas fa-plane" style="height: 10px;width: 10px;color:orange; text-shadow: 0 0 5px #2b36e8;"></i>`]: airportLayer
+    },
+    "<b>Global</b>": {
+        [`Earthquake Actvity`]: earthquakeMag,
+        [`Plate Boundaries`]: faults
+    }
+};
+
+
+// ADD ZOOM CONTROL TO MYMAP - FIRST BUTTON TO BE ADDED
+L.control.zoom({
+     position: CheckScreenSize(),
+}).addTo(mymap);
 // L.control.layers(baseMaps).addTo(mymap);
 
-// GETTING MAP BOUNDS
+// GETTING MYMAP BOUNDS
 var southWest = L.latLng(-89.98155760646617, -180),
 northEast = L.latLng(89.99346179538875, 180);
 var bounds = L.latLngBounds(southWest, northEast);
 
-// SETTING MAP BOUNDS
+// SETTING MYMAP BOUNDS - PREVENTS INFINITE VERSIONS OF MYMAP
 mymap.setMaxBounds(bounds);
 mymap.on('drag', function() {
     mymap.panInsideBounds(bounds, { animate: false });
 });
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// MAIN CODE FLOW
+// EASYBUTTONS PLUGIN
 
-
-// WILL CONTAIN COUNTRY DATA FROM API CALLS
-// SO NO NEED TO CALL API TWICE FOR SAME COUNTRY
-var countryOverviewList = [];
-// WILL CONTAIN ALL COUNTRY EXCHANGE RATES
-
-
-// FIRST CALL TO SERVER
-// CALL TO GET GEOJSON FOR MYMAP
-// PASSES TRUE FOR FIRST CALL TO SERVER
-// PASSES BASEMAPS TO BE ALTERED AND ADDED TO MYMAP
-geoData(true);
-
-
-// DROPDOWN CHANGE CALLS LIST ABOVE OR SERVER VIA AJAX FUNC
-$('#countriesDropdown').change(function() {
-    // way for user to go back to original location
-    if ($('#countriesDropdown').val() === "YourLocation") {
-        navigator.geolocation.getCurrentPosition(function (position) {
-            myLat = position.coords.latitude;
-            myLong = position.coords.longitude;
-            mymap.setView([myLat, myLong], 10);
-        });
-    } else {
-
-        var layer = mymap._layers[$('#countriesDropdown').val()];
-        mymap.fitBounds(layer.getBounds());
-        // FIND COUNTRY IN LIST
-        if ($('#countriesDropdown').val() in countryOverviewList) {
-            // CALL TO CREATE OVERVIEW
-            createOverview(countryOverviewList[$('#countriesDropdown').val()]);
-            // console.log(countryOverviewList);
-            // CALL TO RESET CHARTS
-            resetCharts();
-            // CALL TO LOAD ALL NEW HTML AND CHARTS
-            loadHtmlAndCharts(countryOverviewList[$('#countriesDropdown').val()]);
-            
-            // SIMULATE MODAL OPENING
-            $("#countryData").click();
-            $("#showOverview").click();
-        } else {
-            // CALL LOADING
-            showLoading();
-            // GET COUNTRY DATA  FROM APIS (CALL TO SERVER)
-            countryData($('#countriesDropdown').val(), countryOverviewList, "2000");
-        }
-    }
-});
-
-
-// MODAL TOOLTIP
-$(function () {
-    $('[data-toggle="tooltip"]').tooltip();
+// BUTTONS
+var buttonEconomy = L.easyButton({
+    id: 'button-economy',
+    type: 'replace',          
+    leafletClasses: true,     
+    states:[{                 
+      stateName: 'get-eco',
+      onClick: function(button, map){
+        $('#modalCountryEconomy').modal('show'); // SHOW SPECIFIC MODAL
+      },
+      title: 'Economy Data',
+      icon: '<i class="fas fa-hand-holding-usd" style="font-size:1.5em;"></i>'
+    }]
 })
 
 
-// WILL SHOW AND HIDE MODAL CHARTS AND DATA
-$("#showOverview").click(function(){
-    $("#economy").hide();
-    $("#social").hide();
-    $("#environment").hide();
-    $('[data-toggle="tooltip"]').tooltip('hide');
-    $("#overview").show();
+var buttonEnviron = L.easyButton({
+    id: 'button-environ', 
+    type: 'replace',         
+    leafletClasses: true,     
+    states:[{                 
+      stateName: 'get-env',
+      onClick: function(button, map){
+        $('#modalCountryEnvironment').modal('show'); // SHOW SPECIFIC MODAL
+      },
+      title: 'Environment Data',
+      icon: '<i class="fab fa-envira" style="font-size:1.5em;"></i>'
+    }]
+})
+
+var buttonSocial = L.easyButton({
+    id: 'button-social',
+    type: 'replace',          
+    leafletClasses: true,     
+    states:[{                 
+      stateName: 'get-soc',
+      onClick: function(button, map){
+        $('#modalCountrySocial').modal('show'); // SHOW SPECIFIC MODAL
+      },
+      title: 'Social Data',
+      icon: '<i class="fas fa-users" style="font-size:1.5em;"></i>'
+    }]
+})
+
+
+var buttonOverview = L.easyButton({
+    id: 'button-overview',  
+    type: 'replace',          
+    leafletClasses: true,     
+    states:[{                 
+      stateName: 'get-overview',
+      onClick: function(button, map){
+        $('#modalCountryOverview').modal('show'); // SHOW SPECIFIC MODAL
+      },
+      title: 'Country Overview',
+      icon: '<i class="fas fa-info-circle" style="font-size:1.5em;"></i>'
+    }]
+})
+
+var editBar = L.easyBar([
+    buttonOverview,
+    buttonEconomy,
+    buttonSocial,
+    buttonEnviron,
+    
+], {position: CheckScreenSize()});
+
+
+// EASYBUTTON CONTROL - SECOND BUTTON TO BE ADDED
+editBar.addTo(mymap);
+
+// LAYER CONTROL OPTIONS
+var options = {
+    // Make the "Landmarks" group exclusive (use radio inputs)
+    position: CheckScreenSize(),
+    exclusiveGroups: ["<b>Largest Cities</b>"],
+  };
+
+// ADD LAYER CONTROL TO MYMAP - THIRD BUTTON TO BE ADDED
+var layerControl = L.control.groupedLayers(basemaps, overlayMaps, options);
+mymap.addControl(layerControl);
+
+// LANDMARK LAYER POSITION
+var landmarkLeg = L.control({position: 'bottomright'});
+
+// LANDMARK LEGEND
+landmarkLeg.onAdd = function (map) {
+
+    var div = L.DomUtil.create('div', 'info legend');
+        div.innerHTML +=
+        (`<p> <i style="color: red;" class="fas fa-monument"></i> Historic</p>
+        <p> <i style="color: green;" class="fas fa-tree"></i> Natural</p>
+        <p> <i style="color: blue;" class="fas fa-place-of-worship"></i> Religious</p>
+        <p> <i style="color: black;" class="fas fa-landmark"></i> Other</p>`);
+
+    return div;
+};
+
+// CHECKS FOR ZOOM LEVEL
+mymap.on('zoomend', function () {
+    // REMOVES CITY LAYER IF ZOOMED IN CLOSE
+    // ADDS LANDMARKS AND LANDMARK LEG
+    if (mymap.getZoom() > 9 && mymap.hasLayer(cityLayer)) {
+        mymap.removeLayer(cityLayer);
+        mymap.addLayer(landmarks);
+        landmarkLeg.addTo(mymap);
+    }
+    // ADD CITY LAYER BACK ON ZOOM OUT
+    if (mymap.getZoom() < 9 && mymap.hasLayer(cityLayer) == false) {
+        // ONLY ADD IT BACK IF CITY LAYER IS SELECTED
+        if (mymap.hasLayer(weatherLayer) == false && mymap.hasLayer(popLayer) == false) {
+            mymap.addLayer(cityLayer);
+        }
+        // REMOVE LANDMARK LAYER AND LEG
+        mymap.removeLayer(landmarks);
+        landmarkLeg.remove();
+    }   
 });
 
-
-$("#showEconomy").click(function(){
-    $("#social").hide();
-    $("#environment").hide();
-    $("#overview").hide();
-    $('[data-toggle="tooltip"]').tooltip('hide');
-    $("#economy").show();
+mymap.on('dblclick', function(e) {
+    // call latlng converter func
+    latLngToIso(e.latlng.lat, e.latlng.lng);
 });
 
-$("#showSocial").click(function(){
-    $("#economy").hide();
-    $("#environment").hide();
-    $("#overview").hide();
-    $('[data-toggle="tooltip"]').tooltip('hide');
-    $("#social").show();
-});
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-$("#showEnvironment").click(function(){
-    $("#economy").hide();
-    $("#social").hide();
-    $("#overview").hide();
-    $('[data-toggle="tooltip"]').tooltip('hide');
-    $("#environment").show();
-});
+//  **** MAIN GEOJSON ****
+var geoJSON = L.geoJSON(null, {onEachFeature: onEachFeature}).addTo(mymap);
+
+// ADDS FLY TO COUNTRY EVENT
+function onEachFeature(feature, layer) {
+    // give each layer a unique id so iso code matches when selecting dropdown list
+    layer._leaflet_id = feature.properties.iso_a2;
 
 
-// GET LOCATION AND PLACE MARKER ON IT
-function gettingYourLocation() {
-    navigator.geolocation.getCurrentPosition(function (position) {
-        myLat = position.coords.latitude;
-        myLong = position.coords.longitude;
-        mymap.setView([myLat, myLong], 3);
-        // adding the marker divIcon for html
-        var markerPerson = L.divIcon({
-            html: '<i class="fas fa-street-view fa-2x" style="color: #007bff;"></i>',
-            iconSize: [20, 20],
-            iconAnchor: [10, 20],
-            popupAnchor: [15, -10],
-            className: 'myDivIcon'
-        })
-
-        firstMarker = L.marker([myLat, myLong], {icon: markerPerson, draggable: true}).addTo(mymap);
-
-        firstMarker.bindTooltip("<b>Select and Drag Marker for Weather</b>", {
-            permanent: false,
-            className: 'leaflet-tooltip',
-            offset: [0, 10],
-            opacity: 0.75, 
-            direction: 'bottom',
-        })
+    if(feature.properties.iso_a2 === $('#countriesDropdown').val()) {
+        // console.log(layer.getBounds());
+        mymap.flyToBounds(layer.getBounds(), {duration: 5.0});
         
-        // FIRST CALL TO GET WEATHER ON SITE LOAD
-        getWeather(firstMarker.getLatLng().lat,firstMarker.getLatLng().lng);
-
-        // EVERY CALL AFTER
-        firstMarker.on('dragend', function (e) {
-            getWeather(firstMarker.getLatLng().lat,firstMarker.getLatLng().lng);
-        });
-
-        // get country data for your location
-        latLngToIso(myLat, myLong);
-    });
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// AJAX CALLS TO PHP (SERVER)
+// *** DROPDOWN INTERACTION ****
 
-// RETURNS GEOJSON OVERLAYS
-function geoData(firstCall) {
+// DROPDOWN CHANGE CALLS FUNC WHICH IN TURN CALLS SERVER
+$('#countriesDropdown').change(function() {
+
+    // CLEAR PREVIOUS COUNTRY MARKERS AND STYLE
+    geoJSON.clearLayers();
+    cityLayer.clearLayers();
+    weatherLayer.clearLayers();
+    webcamLayer.clearLayers();
+    airportLayer.clearLayers();
+    popLayer.clearLayers();
+
+    // SHOW LOADING IMG
+    showLoading();
+
+    // CALL TO SERVER WITH COUNTRY ISO CODE
+    getCountry($('#countriesDropdown').val(), geoJSON, airportLayer, webcamLayer, cityLayer, weatherLayer, popLayer);
+
+});
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//  FUNC TO GET ISOCODES FOR DROPDOWN
+function getDropdownData(earthquakeMag, faults) {
     $.ajax({
-        url:"php/getAllApi.php",
+        url:"php/getApis.php",
         type: 'POST',
-        data: {
-            firstCall: firstCall
-        },
         success: function(result) {
             // console.log(result);
-            // parse result from php to ensure json format
-            var parse = JSON.parse(result);
-            console.log(parse);
-
-            // SPLIT RETURNED JSON
-            var countryGeojson = parse.countryGeojson;
-            var earthquakes = parse.earthquakes;
-            var plateGeojson = parse.plateGeojson;
-
-            // CALL LOOPS TO ADD JSON COUNTRY ISO CODE TO DROPDOWN LIST
-            loop1(loop2);
-        
-
-            // CALL LOCATION FUNCTION
-            gettingYourLocation();
-
-            // LOOPS TO ADD COUNTRY TO DROPDOWN LIST
-            function loop1() {
-                arr = [];
-                // list keeps all the overviews of the countries from the api countryData
-
-                for(i = 0; i < countryGeojson.features.length; i++) {
-                    // passing both iso code and country name to the array from the geojson file
-                    // countryData(parse.features[i].properties.iso_a2, countryOverviewList, false);
-                    
-                        // pass iso code to api to begin all api calls
-                    arr.push({label:countryGeojson.features[i].properties.name, value: countryGeojson.features[i].properties.iso_a2});
-                }
-                var sorted = arr.sort(function(a, b){
-                    var labelA=a.label.toLowerCase(), labelB=b.label.toLowerCase()
-                    if (labelA < labelB) // sort string ascending
-                        return -1 
-                    if (labelA > labelB)
-                        return 1
-                    return 0 
-                })
-                loop2(sorted);
-            }
+            var plateGeojson = result.plates;
+            var earthquakeGeojson = result.earthquakes;
+            // LOOP RESULT AND ADD TO DROPDOWN
+            for(i = 0; i < result.data.length; i++) {
+                // FORMAT DROPDOWN
+                $('#countriesDropdown').append(`<option value="${result.data[i].code}">${result.data[i].name}</option>`);
     
-            function loop2(arr) {
-                for(i = 0; i < arr.length; i++) {
-                    var select = document.getElementById("countriesDropdown"); 
-                    var opt = arr[i].label;
-                    var el = document.createElement("option");
-                    el.textContent = opt;
-                    el.value = arr[i].value;
-                    select.appendChild(el);
-                }
             }
+            //  CALL TO CREATE EARTHQUAKE AND PLATE GLOBAL LAYERS
+            addEarthquakeLayer(plateGeojson, earthquakeGeojson, earthquakeMag, faults);
 
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-            // EARTHQUAKE MARKERS
+            //  GET USERS CURRENT COUNTRY VIA GEOLOCATION
+            navigator.geolocation.getCurrentPosition(function (position) {
+                myLat = position.coords.latitude;
+                myLong = position.coords.longitude;
+                mymap.setView([myLat, myLong], 10);
+                // CALL TO SERVER TO CONVERT LATLNG TO ISOCODE
+                latLngToIso(myLat, myLong);
             
-            // get plate lat, lng (format output = (lng, lat))
-            var plateCoordinates = [];
-            for (var j = 0; j < plateGeojson.features.length; j++) {
-            var latLngPairs = [];
-            for (var k = 0; k < plateGeojson.features[j].geometry.coordinates.length; k++) {
-                latLngPairs.push([plateGeojson.features[j].geometry.coordinates[k][1], plateGeojson.features[j].geometry.coordinates[k][0]])
-            }
-            plateCoordinates.push(latLngPairs)
-            }
-
-
-            // SCALE OF EARTHQUAKE
-            function markerSize(earthquake_mag) {
-                return earthquake_mag * 15000;
-            }
-        
-            var magMarkers = [];
-        
-            for (var i = 0; i < earthquakes.features.length; i++) {
-                magMarkers.push(
-                    L.circle([+earthquakes.features[i].geometry.coordinates[1], +earthquakes.features[i].geometry.coordinates[0]], {
-                        fillOpacity: 0.6,
-                        color: getColorQuake(+earthquakes.features[i].properties.mag),
-                        fillColor: getColorQuake(+earthquakes.features[i].properties.mag),
-                        radius: markerSize(+earthquakes.features[i].properties.mag)
-                    }).bindPopup(
-                        `<div style="text-align:center;">
-                            <h6> ${earthquakes.features[i].properties.place} </h6> 
-                            <hr style="margin-top: 0; margin-bottom: 0;">
-                            <div class="row d-block mb-1 mt-1">
-                                <span class="text-primary">Earthquake Magnitude</span>
-                            </div>
-                            <div class="row d-block mb-1 mt-1">
-                                <span>${earthquakes.features[i].properties.mag}</span>
-                            </div>
-                            <hr style="margin-top: 0; margin-bottom: 0;">  
-                            <div class="row d-block mb-1 mt-1">
-                                <span class="text-primary">Earthquake Depth (km)</span>
-                            </div> 
-                            <div class="row d-block mb-1 mt-1">
-                                <span>${earthquakes.features[i].geometry.coordinates[2]}</span>
-                            </div>  
-                            <hr style="margin-top: 0; margin-bottom: 0;"> 
-                            <div class="row d-block mb-1 mt-1">
-                                <span class="text-primary">Significance Rating</span>
-                            </div>  
-                            <div class="row d-block mb-1 mt-1">
-                                <span>${earthquakes.features[i].properties.sig}</span>
-                            </div>  
-                            <hr style="margin-top: 0; margin-bottom: 0;"> 
-                            <div class="row d-block mb-1 mt-1">
-                                <span class="text-primary">Time</span>
-                            </div>  
-                            <div class="row d-block mb-1 mt-1">
-                                <span>${new Date(earthquakes.features[i].properties.time)}</span>
-                            </div>
-                        </div>`)
-                );
-            }
-        
-            var faultMarkers = [];
-
-        
-            for (var m = 0; m < plateCoordinates.length; m++) {
-                faultMarkers.push(
-                    L.polyline(plateCoordinates[m], {
-                        color: "#0060d6",
-                    }).bindPopup("<h4>" + plateGeojson.features[m].properties.Name + "</h4>")
-                );
-            }
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-            // MAP LAYERS
-
-            // LAYER GROUPS
-            var earthquakeMag = L.layerGroup(magMarkers);
-            var faults  = L.layerGroup(faultMarkers);
-            var gdpColours = L.geoJSON(countryGeojson, {style: gdpStyle, onEachFeature: onEachFeatureGDP}); // style based on GDP
-            var growthColours = L.geoJSON(countryGeojson, {style: growthStyle, onEachFeature: onEachFeatureGrowth}); // style based on Growth
-            var carbonColours = L.geoJSON(countryGeojson, {style: carbonStyle, onEachFeature: onEachFeatureCarbon});// style based on Carbon
-            var noLayer = L.geoJSON(countryGeojson, {style: style, onEachFeature: onEachFeatureMain}).addTo(mymap); // normal styling 
-
-        
-            // TOGGLE BETWEEN LAYERS
-            var baseMaps2 = {
-                ["<span>Normal Map View</span>"]: noLayer,
-                [`<span>Earthquake Actvity</span>`]: earthquakeMag,
-                [`<span>Population Growth</span>`]: growthColours,
-                [`<span>CO2 Emissions</span>`]: carbonColours,
-                [`<span>GDP</span>`]: gdpColours,
-            };
-        
-            var overlayMaps = {
-                "Plate Boundaries": faults,
-            }
-
-            // Would be better way of implementing layer control
-            // but doesnt work atm
-
-            // var groupedOverlays = {
-            //     "World Bank": {
-            //       "Population Growth": growthColours,
-            //       "CO2 Emissions": carbonColours,
-            //       "GDP": gdpColours,
-            //     },
-            //     "Earthquakes": {
-            //         "Earthquake Actvity": earthquakeMag,
-            //         "Plate Boundaries": faults,
-            //     }
-            // };
-
-            
-            // var options = {
-            //     // Make the "Landmarks" group exclusive (use radio inputs)
-            //     exclusiveGroups: ["World Bank"],
-            //     // Show a checkbox next to non-exclusive group labels for toggling all
-            //     groupCheckboxes: true
-            // };
-              
-            // L.control.groupedLayers(baseMaps, groupedOverlays, options).addTo(mymap);
-            
-            // ADD MAPS AND LAYERS TO MYMAP
-            L.control.layers(baseMaps2, overlayMaps).addTo(mymap);
-            
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-            // LEGENDS
-
-            // FUNC TO CREATE LEGEND
-            function createLegend(name, label, scaleArray, colorScheme) {
-
-                name = L.control({position: 'bottomright'});
-        
-                name.onAdd = function () {
-            
-                var div = L.DomUtil.create('div', `${label} legend`);
-                // TITLE
-                div.innerHTML += `<h6 id="legendTitle">${label}</h6>`;
-                // COLOUR
-                for (var i = 0; i < scaleArray.length; i++) {
-                    div.innerHTML +=
-                        '<span style="background:' + colorScheme(scaleArray[i]) + '"></span> ';
-                }
-            
-                // BREAK
-                div.innerHTML += '<br>';
-            
-                // SCALE
-                for (var i = 0; i < scaleArray.length; i++) {
-                    if (i === 0) {
-                        div.innerHTML +=
-                        '<label>&le; ' + roundLarge(scaleArray[i]) + '</label>';
-                    } else if (i === scaleArray.length - 1) {
-                        div.innerHTML +=
-                        '<label>' + roundLarge(scaleArray[i]) + ' &le;</label>';
-                    } else {
-                        div.innerHTML +=
-                        '<label>' + roundLarge(scaleArray[i]) + '</label>';
-                    }
-                }
-                return div;
-                };
-                return name;
-            }
-
-            // LEGEND SCALES
-            var earthquakeLegend,
-                mags = [2, 3, 4, 5, 6];
-            var gdpLegend,
-                gdps = [1.0e+9, 50.0e+9, 100.0e+9, 500.0e+9, 1.0e+12, 2.0e+12, 10.0e+12];
-            var growthLegend,
-                percent = [-2, -1, 0, 1, 2, 3, 4];
-            var co2Legend,
-                carbon = [0.5, 1, 5, 10, 15, 20, 30];
-                // [0.5, 1, 5, 10, 15, 20, 30];
-
-            // php returns latest data which covers most countries 
-            // as of typing  2021 - 5 = 2016
-            var currentYear = new Date().getFullYear() - 5;
-
-            // CALL FUNC TO CREATE LEGENDS
-            var earthLeg = createLegend(earthquakeLegend, `Magnitude (Past Month)`, mags, getColorQuake);
-            var gdpLeg = createLegend(gdpLegend, `GDP (US$) (${currentYear})`, gdps, getColorGdp);
-            var growthLeg = createLegend(growthLegend, `Annual Growth % (${currentYear})`, percent, getColorGrowth);
-            var co2Leg = createLegend(co2Legend, `Metric tons per capita (MT) (${currentYear})`, carbon, getColorCarbon);
-
-
-            // TOGGLE WHEN TO SHOW LEGEND
-            mymap.on('baselayerchange', function (eventLayer) {
-                // adds legend
-                if (eventLayer.name === `<span>Earthquake Actvity</span>`) {
-                    earthLeg.addTo(this);
-                    gdpLeg.remove();
-                    growthLeg.remove();
-                    co2Leg.remove();
-                    $('#countriesDropdown').prop('disabled', true);
-                } else if (eventLayer.name === `<span>GDP</span>`) {
-                    gdpLeg.addTo(this);
-                    earthLeg.remove();
-                    growthLeg.remove();
-                    co2Leg.remove();
-                    $('#countriesDropdown').prop('disabled', true);
-                } else if (eventLayer.name === `<span>Population Growth</span>`) {
-                    growthLeg.addTo(this);
-                    earthLeg.remove();
-                    gdpLeg.remove();
-                    co2Leg.remove();
-                    $('#countriesDropdown').prop('disabled', true);
-                } else if (eventLayer.name === `<span>CO2 Emissions</span>`) {
-                    co2Leg.addTo(this);
-                    earthLeg.remove();
-                    gdpLeg.remove();
-                    growthLeg.remove();
-                    $('#countriesDropdown').prop('disabled', true);
-                } else if (eventLayer.name === '<span>Normal Map View</span>') {
-                    co2Leg.remove();
-                    earthLeg.remove();
-                    gdpLeg.remove();
-                    growthLeg.remove();
-                    $('#countriesDropdown').prop('disabled', false);
-                }
             });
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-            // ONEACHFEATURE
-
-            // MAIN ONEACHFEATURE
-            function onEachFeatureMain(feature, layer) {
-                // give each layer a unique id so iso code matches when selecting dropdown list
-                layer._leaflet_id = feature.properties.iso_a2;
-                
-                layer.on({
-                    mouseover: highlight,
-                    mouseout: resetHighlight,
-                    click: onMapClick,
-                });
-            }
-            
-            function onMapClick(e) {
-                // call api to convert latlng to iso code
-                latLngToIso(e.latlng.lat, e.latlng.lng);
-                
-            }
-
-            // highlight will change country styling when mouse moves over
-            function highlight(e) {
-            
-                var layer = e.target;
-            
-                layer.setStyle({
-                    weight: 3,
-                    color: '#3d81b5',
-                    dashArray: '5',
-                    opacity: 1,
-                });
-            
-                if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
-                    layer.bringToFront();
-                }
-            }
-
-            // in order to reset style must declare geojson again? - NO
-            // var geojson;
-            
-            function resetHighlight(e) {
-                noLayer.resetStyle(e.target);
-            }
-
-
-            // GDP ONEACHFEATURE
-            function onEachFeatureGDP(feature, layer) {
-                // console.log(feature);
-                // POPUP WITH COUNTRY DATA
-                layer.bindPopup(`
-                <p>${feature.properties.name} GDP (US$): ${roundLarge(feature.properties.gdp)}</p>`);
-            }
-
-             // GROWTH ONEACHFEATURE
-            function onEachFeatureGrowth(feature, layer) {
-
-                // POPUP WITH COUNTRY DATA
-                layer.bindPopup(`
-                <p>${feature.properties.name} Growth (%): ${roundLarge(feature.properties.growth)}</p>`);
-            }
-
-             // CARBON ONEACHFEATURE
-            function onEachFeatureCarbon(feature, layer) {
-
-                // POPUP WITH COUNTRY DATA
-                layer.bindPopup(`
-                <p>${feature.properties.name} Emissions (MT): ${roundLarge(feature.properties.co2)}</p>`);
-            }
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-            // STYLES
-
-            // COLOUR SCHEME FOR EARTHQUAKES AND LEGEND
-            function getColorQuake(d) {
-                return d >= 6 ? '#bd0026' :
-                    d >= 5 ? '#f03b20' :
-                    d >= 4 ? '#fd8d3c' :
-                    d >= 3 ? '#feb24c' :
-                    d >= 2 ? '#fed976' :
-                            '#ffffb2';
-            }
-            
-            // COLOUR SCHEME FOR GDP AND LEGEND
-            function getColorGdp(d) {
-                return d >= 10.0e+12 ? '#005a32' :
-                d >= 2.0e+12 ? '#238443' :
-                d >= 1.0e+12 ? '#41ab5d' :
-                d >= 500.0e+9 ? '#78c679' :
-                d >= 100.0e+9 ? '#addd8e' :
-                d >= 50.0e+9 ? '#d9f0a3' :
-                d >= 1.0e+9 ? '#f7fcb9' :
-                        '#ffffe5';
-            }
-
-            function getColorGrowth(d) {
-                return d > 4 ? '#7a0177' :
-                d > 3 ? '#ae017e' :
-                d > 2 ? '#dd3497' :
-                d > 1 ? '#f768a1' :
-                d > 0 ? '#fa9fb5' :
-                d > -1 ? '#fcc5c0' :
-                d > -2 ? '#fde0dd' :
-                        '#fff7f3';
-            }
-
-            function getColorCarbon(d) {
-                return d > 30 ? '#b10026' :
-                d > 20 ? '#e31a1c' :
-                d > 15 ? '#fc4e2a' :
-                d > 10 ? '#fd8d3c' :
-                d > 5 ? '#feb24c' :
-                d > 1 ? '#fed976' :
-                d > 0.5 ? '#ffeda0' :
-                        '#ffffcc';
-            }
-
-            // MAIN STYLING
-            function style(feature) {
-                return {
-                    weight: 1,
-                    opacity: 0,
-                    color: '#ff7800',
-                    dashArray: '1',
-                    fillOpacity: 0
-                };
-            }
-
-            // GDP STYLING
-            function gdpStyle(feature) {
-                return {
-                    fillColor: getColorGdp(feature.properties.gdp), // func to get colour based on GDP - wb api
-                    weight: 2,
-                    opacity: 1,
-                    color: 'white',
-                    dashArray: '3',
-                    fillOpacity: 0.7
-                };
-            }
-
-            // GROWTH STYLING
-            function growthStyle(feature) {
-                return {
-                    fillColor: getColorGrowth(feature.properties.growth), // func to get colour based on GROWTH - wb api
-                    weight: 2,
-                    opacity: 1,
-                    color: 'white',
-                    dashArray: '3',
-                    fillOpacity: 0.7
-                };
-            }
-
-            // CARBON STYLING
-            function carbonStyle(feature) {
-                return {
-                    fillColor: getColorCarbon(feature.properties.co2), // func to get colour based on CO2 - wb api
-                    weight: 2,
-                    opacity: 1,
-                    color: 'white',
-                    dashArray: '3',
-                    fillOpacity: 0.7
-                };
-            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.log(' error')
         }
     });
-};
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// **** FUNC TO GET COUNTRY DATA FROM SERVER ****
 
+// RETURNS COUNTRY FROM DROPDOWN SELECT OR MAP CLICK
+function getCountry(countryCode, geoJSON, airportLayer, webcamLayer, cityLayer, weatherLayer, popLayer) {
+    $.ajax({
+        url:"php/getApis.php",
+        type: 'POST',
+        dataType: "json",
+        data: {
+            countryCode: countryCode,
+        },
+        success: function(result) {
+            hideLoading();
+            console.log(result);
+            // console.log('got server data')
 
-// CHANGE LATLNG TO ISO CODE (CALL TO SERVER)
+            // ADD GEOJSON
+            var countryGeojson = result.data.border;
+            geoJSON.addData(countryGeojson);
+            
+            // SET STYLE FOR COUNTRY
+            mymap._layers[$('#countriesDropdown').val()].setStyle({
+                weight: 3,
+                fillColor: 'blue',
+                color: 'gold',
+                // dashArray: '5',
+                opacity: 0.5,
+                fillOpacity: 0.2
+            });
+
+            // OVERVIEW MODAL
+            createOverview(result.data.overview);
+
+            // RESET
+            resetCharts();
+
+            // LOAD
+            loadHtmlAndCharts(result.data.worldBank);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //  MARKERS
+
+            //  AIRPORT MARKERS
+            loadAirports(result.data.airports, airportLayer);
+
+            //  WEBCAMS MARKERS
+            loadWebcam(result.data.webcams.result.webcams, webcamLayer);
+
+            //  CITY MARKERS
+            var cities = result.data.border.properties.cities
+            var capital = result.data.overview.capital;
+            loadCities(cities, capital, cityLayer);
+
+            //  POP MARKERS
+            loadPop(cities, capital, popLayer);
+           
+            //  WEATHER MARKERS
+            loadWeather(result.data.border.properties.cityWeather.list, weatherLayer);
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            // MODAL INTERACTIONS
+
+            // OPEN OVERVIEW MODAL
+            $('#button-overview').click();
+
+            // AUTO SCROLL TO CHART
+            $('.collapse').on('shown.bs.collapse', function(e) {
+                document.getElementById(e.target.id).scrollIntoView({
+                    // behavior: 'smooth', not working
+                  });
+            });
+        }
+    });
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//  **** LATLNG TO ISO CODE FUNC ****
+
 function latLngToIso(latitude, longitude) {
     $.ajax({
-        url:"php/getAllApi.php",
+        url:"php/getApis.php",
         type: 'POST',
         data: {
             lat: latitude,
             lng: longitude,
         },
         success: function(result) {
-            // console.log(result);
-            // parse result from php to ensure json format
-            var json = JSON.parse(result);
-            // console.log(json);
+            console.log(result);
 
             // CHANGE DROPDOWN VALUE
-            $('#countriesDropdown').val(json).change();
+            $('#countriesDropdown').val(result).change();
 
         },
         error: function(jqXHR, textStatus, errorThrown) {
@@ -671,130 +538,344 @@ function latLngToIso(latitude, longitude) {
         }
     });
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  **** FUNCS TO ADD MARKERS TO LAYERS ****
+
+// EARTHQUAKE MARKERS
+function addEarthquakeLayer(plateGeojson, earthquakes, earthquakeMag, faults) {
+    // get plate lat, lng (format output = (lng, lat))
+    var plateCoordinates = [];
+    for (var j = 0; j < plateGeojson.features.length; j++) {
+    var latLngPairs = [];
+    for (var k = 0; k < plateGeojson.features[j].geometry.coordinates.length; k++) {
+        latLngPairs.push([plateGeojson.features[j].geometry.coordinates[k][1], plateGeojson.features[j].geometry.coordinates[k][0]])
+    }
+    plateCoordinates.push(latLngPairs)
+    }
+
+    // SCALE OF EARTHQUAKE
+    function markerSize(earthquake_mag) {
+        return earthquake_mag * 15000;
+    }
 
 
-// GET COUNTRY DATA (CALL TO SERVER)
-function countryData(isoCode, countryOverviewList, startYear) {
-
-    $.ajax({
-        url:"php/getAllApi.php",
-        type: 'POST',
-        data: {
-            iso: isoCode,
-            startYear: startYear,
-        },
-        success: function(result) {
-
-            // parse result from php to ensure json format
-            var json = JSON.parse(result);
-            console.log(json);
-            // console.log(result);
-            countryOverviewList[isoCode] = (json);
-
-            // console.log(json);
-
-            console.log(countryOverviewList);
-            createOverview(json);
-
-            resetCharts();
-            // loadCanvas();
-
-            loadHtmlAndCharts(json);
-
-            hideLoading();
-
-            $("#countryData").click();
-            $("#showOverview").click();
-
-
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            console.log('countryData error')
-        }
-    });
-};
-
-
-// GET WEATHER FROM API (CALL TO SERVER)
-function getWeather(markerLat, markerLng) {
-
-    $.ajax({
-        url:"php/getAllApi.php",
-        type: 'POST',
-        data: {
-            markerLat: markerLat,
-            markerLng: markerLng
-        },
-        success: function(result) {
-            // console.log(result);
-            // parse result from php to ensure json format
-            var json = JSON.parse(result);
-            // console.log(json);
-
-            if (json.name === "") {
-                var title = "N/A";
-            } else {
-                var title = json.name + ", " + json.sys.country;
-            }
-
-            firstMarker.bindPopup(
+    for (var i = 0; i < earthquakes.features.length; i++) {
+            (L.circle([+earthquakes.features[i].geometry.coordinates[1], +earthquakes.features[i].geometry.coordinates[0]], {
+                fillOpacity: 0.6,
+                color: getColorQuake(+earthquakes.features[i].properties.mag),
+                fillColor: getColorQuake(+earthquakes.features[i].properties.mag),
+                radius: markerSize(+earthquakes.features[i].properties.mag)
+            }).bindPopup(
                 `<div style="text-align:center;">
-                    <h6>${title}</h6>
-                    <div id="icon" style="margin-bottom:5px; border-radius:12px;
-                    background-color:#008effb8;">
-                        <img id="wicon" src="https://openweathermap.org/img/wn/${json.weather[0].icon}.png" alt="Weather icon">
-                    </div>
+                    <h6> ${earthquakes.features[i].properties.place} </h6> 
                     <hr style="margin-top: 0; margin-bottom: 0;">
                     <div class="row d-block mb-1 mt-1">
-                        <span class="text-primary">Description</span>
+                        <span class="text-primary">Earthquake Magnitude</span>
                     </div>
-                    <div class="row d-block ">
-                        <span id="summary">${json.weather[0].description}</span>
-                    </div>
-                    <hr style="margin-top: 0; margin-bottom: 0;">
                     <div class="row d-block mb-1 mt-1">
-                        <span class="text-primary">Temperature</span>
+                        <span>${earthquakes.features[i].properties.mag}</span>
                     </div>
-                    <div class="row d-block ">
-                        <span id="temperature">${json.main.temp + " °C"}</span>
-                    </div>
-                    <hr style="margin-top: 0; margin-bottom: 0;">
+                    <hr style="margin-top: 0; margin-bottom: 0;">  
                     <div class="row d-block mb-1 mt-1">
-                        <span class="text-primary">Pressure</span>
-                    </div>
-                    <div class="row d-block ">
-                        <span id="pressure">${json.main.pressure + " Pa"}</span>
-                    </div>
-                    <hr style="margin-top: 0; margin-bottom: 0;">
+                        <span class="text-primary">Earthquake Depth (km)</span>
+                    </div> 
                     <div class="row d-block mb-1 mt-1">
-                        <span class="text-primary">Humidity</span>
-                    </div>
-                    <div class="row d-block ">
-                        <span id="humidity">${json.main.humidity + " %"}</span>
-                    </div>
-                    <hr style="margin-top: 0; margin-bottom: 0;">
+                        <span>${earthquakes.features[i].geometry.coordinates[2]}</span>
+                    </div>  
+                    <hr style="margin-top: 0; margin-bottom: 0;"> 
                     <div class="row d-block mb-1 mt-1">
-                        <span class="text-primary">Wind Speed</span>
+                        <span class="text-primary">Significance Rating</span>
+                    </div>  
+                    <div class="row d-block mb-1 mt-1">
+                        <span>${earthquakes.features[i].properties.sig}</span>
+                    </div>  
+                    <hr style="margin-top: 0; margin-bottom: 0;"> 
+                    <div class="row d-block mb-1 mt-1">
+                        <span class="text-primary">Time</span>
+                    </div>  
+                    <div class="row d-block mb-1 mt-1">
+                        <span>${new Date(earthquakes.features[i].properties.time)}</span>
                     </div>
-                    <div class="row d-block ">
-                        <span id="windSpeed">${json.wind.speed + " m/s"}</span>
-                    </div>
-                </div>`
-            );
-            
-            firstMarker.openPopup();
+                </div>`)
+        ).addTo(earthquakeMag);
+    }
 
 
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            console.log('latLngToIso error')
+    for (var m = 0; m < plateCoordinates.length; m++) {
+            (L.polyline(plateCoordinates[m], {
+                color: "#0060d6",
+            }).bindPopup("<h6>" + plateGeojson.features[m].properties.Name + "</h6>")
+        ).addTo(faults);
+    }
+
+    // LEGEND
+    var earthquakeLegend;
+    var mags = [2, 3, 4, 5, 6];
+    var leg = legendCreateAndAdd(earthquakeLegend, `Magnitude (Past Month)`, mags, getColorQuake);
+
+        // ADD/REMOVE LAYER ON CHANGE
+    mymap.on('overlayadd', function (eventLayer) {
+        if (eventLayer.name === `Earthquake Actvity`) {
+            mymap.setZoom(2, {duration: 10.0});
+            leg.addTo(mymap);
+        } 
+        if (eventLayer.name === `Plate Boundaries`) {
+            mymap.setZoom(2, {duration: 10.0});
         }
     });
+
+    mymap.on('overlayremove', function (eventLayer) {
+        if (eventLayer.name === `Earthquake Actvity`) {
+            this.removeControl(leg);
+        } 
+    });
+
+    // COLOUR SCHEME FOR EARTHQUAKES AND LEGEND
+    function getColorQuake(d) {
+        return d >= 6 ? '#bd0026' :
+            d >= 5 ? '#f03b20' :
+            d >= 4 ? '#fd8d3c' :
+            d >= 3 ? '#feb24c' :
+            d >= 2 ? '#fed976' :
+                    '#ffffb2';
+    }
+
 }
+
+
+//  AIRPORT FUNC
+function loadAirports(airports, airportLayer) {
+
+    var airportIcon = L.divIcon({
+        html: '<i class="fas fa-plane" style="color:orange; text-shadow: 0 0 5px #2b36e8;"></i>',
+        iconSize: [10, 10],
+        iconAnchor: [5, 10],
+        popupAnchor: [0, -10],
+        className: 'planeIcon'
+    });
+
+    $.each(airports, function() {
+        var lat = this.geometry.coordinates[1];
+        var lng = this.geometry.coordinates[0];
+        if (this.fields.website === undefined) {
+            var website = "N/A";
+        } else {
+            var website = `<a style ="font-color: grey" href="${this.fields.website}" target="_blank">${this.fields.website}`
+        }
+
+        var marker = L.marker([lat, lng], {icon: airportIcon}).bindPopup(`
+            <table class="table table-sm table-light">
+                <thead>
+                    <tr>
+                        <th colspan="2" class="table-dark">${this.fields.name}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Website </td>
+                        <td>${website}</td>
+                    </tr>
+                    <tr>
+                        <td>API </td>
+                        <td><a href="https://babel.opendatasoft.com/explore/dataset/osm-world-airports/information/" target="_blank">osm-world-airports</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        `);
+
+        // add to global layer
+        marker.addTo(airportLayer);
+    })
+}
+
+
+//  WEBCAM FUNC
+function loadWebcam(webcams, webcamLayer) {
+
+    $.each(webcams, function() {
+
+        var webcamIcon = L.divIcon({
+            html: '<i class="fas fa-video" style="; color: #2b36e8; text-shadow: 0 0 5px #2b36e8;"></i>',
+            iconSize: [10, 10],
+            iconAnchor: [5, 10],
+            popupAnchor: [15, -10],
+            className: 'webcamIcon',
+            id: [this.location.city, this.location.region, this.location.country, this.location.wikipedia, this.player.day.embed]
+        });
+
+
+        var lat = this.location.latitude;
+        var lng = this.location.longitude;
+
+        var marker = L.marker([lat, lng], {icon: webcamIcon})
+    
+        // add to global layer
+        marker.addTo(webcamLayer);
+    });
+}
+
+
+//  CITY FUNC
+function loadCities(cities, capital, cityLayer) {
+
+    // loop city and create markers
+    $.each(cities, function() {
+        // console.log(this);
+        var lat = this.latitude;
+        var lng = this.longitude;
+        var pop = this.population;
+
+        // city marker styles
+        var starIcon = L.divIcon({
+            html: '<i class="fas fa-star fa-2x" style="opacity: 0.8; color: #ffc107; text-shadow: 0 0 5px #000;"></i>',
+            iconSize: [10, 10],
+            iconAnchor: [5, 10],
+            popupAnchor: [15, -10],
+            className: 'capitalIcon',
+            id: `${this.name}`
+        });
+
+        var cityIcon = L.divIcon({
+            html: '<i class="fas fa-city" style="opacity: 0.8; color: white; text-shadow: 0 0 5px #000;"></i>',
+            iconSize: [10, 10],
+            iconAnchor: [5, 10],
+            popupAnchor: [15, -10],
+            className: 'cityIcon',
+            id: `${this.name}`
+        });
+
+        if (capital.toLowerCase() === this.name.toLowerCase()) {
+            var marker = L.marker([lat, lng], {icon: starIcon});
+        } else {
+            var marker = L.marker([lat, lng], {icon: cityIcon});
+        }
+
+        marker.addTo(cityLayer);
+    });
+}
+
+
+//  POP FUNC
+function loadPop(cities, capital, popLayer) {
+
+    // loop city pop and create markers
+    $.each(cities, function() {
+        // console.log(this);
+        var lat = this.latitude;
+        var lng = this.longitude;
+        var pop = this.population;
+
+        function markerSize(pop) {
+            return pop * 0.01;
+        }
+        
+        var marker = L.circle([+lat, +lng], {
+            fillOpacity: 0.6,
+            color: 'black',
+            fillColor: 'red',
+            radius: markerSize(pop),
+            weight: 2,
+        }).bindPopup(
+            `<table class="table table-sm table-light">
+                <thead>
+                    <tr>
+                        <th colspan="2" class="table-dark">${this.name}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Population </td>
+                        <td>${pop.toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                        <td>API </td>
+                        <td colspan="2"><a href="https://public.opendatasoft.com/explore/dataset/geonames-all-cities-with-a-population-1000/information/?disjunctive.country" target="_blank">Geonames Cities</a></td>
+                    </tr>
+                </tbody>
+            </table>`
+        );
+
+        marker.addTo(popLayer);
+    });
+
+}
+
+
+//  WEATHER FUNC
+function loadWeather(weather, weatherLayer) {
+
+    // loop city weather and create markers
+    $.each(weather, function() {
+        // console.log(this);
+        var lat = this.coord.lat;
+        var lng = this.coord.lon;
+        var icon = this.weather[0].icon;
+        var title = this.name;
+        var temperature = this.main.temp;
+        var clouds = this.clouds.all;
+        var humidity = this.main.humidity;
+        var pressure = this.main.pressure;
+        var windDirection = this.wind.deg;
+        var windSpeed = this.wind.speed;
+
+        var weatherIcon = L.divIcon({
+            html: `<div class="weatherIcon">
+                        <img class="weatherImg" src="https://openweathermap.org/img/wn/${icon}.png" height="25px" width="25px"alt="Weather icon">
+                    </div>`,
+            iconSize: [10, 10],
+            iconAnchor: [20, 20],
+            popupAnchor: [-5, -20],
+            className: 'iconWeather'
+        });
+
+        var marker = L.marker([lat, lng], {icon: weatherIcon}).bindPopup(
+            `<table class="table table-sm table-light table-striped">
+                <thead>
+                    <tr>
+                        <th colspan="2" class="table-dark">${title}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Temperature</td>
+                        <td>${temperature}ºC</td>
+                    </tr>
+                    <tr>
+                        <td>Clouds</td>
+                        <td>${clouds}%</td>
+                    </tr>
+                    <tr>
+                        <td>Humidity</td>
+                        <td>${humidity}%</td>
+                    </tr>
+                    <tr>
+                        <td>Pressure</td>
+                        <td>${pressure}Pa</td>
+                    </tr>
+                    <tr>
+                        <td>Wind Direction</td>
+                        <td>${windDirection}°</td>
+                    </tr>
+                    <tr>
+                        <td>Wind Speed</td>
+                        <td>${windSpeed}m/s</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><a href="https://openweathermap.org/">https://openweathermap.org/</a></td>
+                    </tr>
+                </tbody>
+            </table>`
+        );
+        
+        // ADD TO LAYER
+        marker.addTo(weatherLayer);
+    });
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// HELPER FUNCTIONS
+// **** HELPER FUNCTIONS ****
 
 // ROUNDING LARGE DATA
 function roundLarge(x) {
@@ -811,6 +892,9 @@ function roundLarge(x) {
         }
         if (Number(number) >= 1.0e+6) {
             return (number/1.0e+6).toFixed(1) + " M";
+        } 
+        if (Number(number) >= 1.0e+5) {
+            return (number/1.0e+6).toFixed(1) + " K";
         }
         if (Number(number) >= 1.0e+4) {
             return number.toLocaleString();
@@ -830,48 +914,87 @@ function hideLoading() {
     $("#loading").hide();
 }
 
+// LEGEND CREATOR - FOR EARTHQUAKES
+function legendCreateAndAdd(name, label, scaleArray, colorScheme) {
+
+    name = L.control({position: 'bottomright'});
+
+    name.onAdd = function () {
+
+    var div = L.DomUtil.create('div', `${label} legend`);
+    // TITLE
+    div.innerHTML += `<h6 id="legendTitle">${label}</h6>`;
+    // COLOUR
+    for (var i = 0; i < scaleArray.length; i++) {
+        div.innerHTML +=
+            '<span style="background:' + colorScheme(scaleArray[i]) + '"></span> ';
+    }
+
+    // BREAK
+    div.innerHTML += '<br>';
+
+    // SCALE
+    for (var i = 0; i < scaleArray.length; i++) {
+        if (i === 0) {
+            div.innerHTML +=
+            '<label>&le; ' + roundLarge(scaleArray[i]) + '</label>';
+        } else if (i === scaleArray.length - 1) {
+            div.innerHTML +=
+            '<label>' + roundLarge(scaleArray[i]) + ' &le;</label>';
+        } else {
+            div.innerHTML +=
+            '<label>' + roundLarge(scaleArray[i]) + '</label>';
+        }
+    }
+
+    //  LINK
+    div.innerHTML += '<br>';
+    div.innerHTML += `<p><a href="https://earthquake.usgs.gov/fdsnws/event/1/" target="_blank">USGS Earthquakes</a></p>`;
+    div.innerHTML += `<p><a href="https://github.com/fraxen/tectonicplates" target="_blank">Fraxen Github</a> </p>`;
+    
+    return div;
+    };
+    return name;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-// CREATE FUNCTIONS
+// **** CREATE FUNCTIONS ****
 
 // CREATES COUNTRY OVERVIEW
 function createOverview(country) {
-    //countryOverview
-    $('#countryData').html("Review " + country.CountryOverview.name)
-    $('#countrySelect').html(country.CountryOverview.name);
     // Country Overview table data
-    $('.countryTitle').html(country.CountryOverview.name);
-    $('.flag').attr("src", country.CountryOverview.flag);
-    $('#capital').html(country.CountryOverview.capital);
-    $('#currency').html(country.CountryOverview.currencies[0].name);
-    $('#population').html(country.CountryOverview.population.toLocaleString());
-    $('#size').html(country.CountryOverview.area.toLocaleString()+' km<sup>2</sup>');
-    $('#wikiLink').html(country.CountryOverview.name);
+    $('.countryTitle').html(country.name);
+    $('.flag').attr("src", country.flag);
+    $('#capital').html(country.capital);
+    $('#currency').html(country.currencies[0].name);
+    $('#population').html(country.population.toLocaleString());
+    $('#size').html(country.area.toLocaleString()+' km<sup>2</sup>');
+    $('#wikiLink').html(country.name);
     languagesList = [];
-    if (country.CountryOverview.languages.length > 1) {
-        for (i = 0; i < country.CountryOverview.languages.length; i++) {
-            languagesList.push(country.CountryOverview.languages[i].name);
+    if (country.languages.length > 1) {
+        for (i = 0; i < country.languages.length; i++) {
+            languagesList.push(country.languages[i].name);
         }
         $('#languages').html(languagesList.join(", "));
     } else {
-        $('#languages').html(country.CountryOverview.languages[0].name);
+        $('#languages').html(country.languages[0].name);
     }
-    $('#wikiLink').attr("href", "https://en.wikipedia.org/wiki/"+ country.CountryOverview.name);
+    $('#wikiLink').attr("href", "https://en.wikipedia.org/wiki/"+ country.name);
 }
 
-// CREATES COUNTRY GRAPHS (E.G. ECONOMIC)
+// CREATES COUNTRY GRAPHS
 function createGraphs(jsonToLoop, category, charts, section, collapseArray, color) {
     index = 0;
 
     $.each(jsonToLoop, function (demographic, year) {
         // create arrays for all demographics
-        //y-axis
+        // y-axis
         var dataArray = [];
-        //x-axis
+        // x-axis
         var yearArray = [];
-        //push data into
+        // push data into array
         $.each(year, function (key, data) {
 
             if (data != null) {
@@ -883,9 +1006,9 @@ function createGraphs(jsonToLoop, category, charts, section, collapseArray, colo
             yearArray.push(key);
         })
 
-        //creating html for each chart
-        $(section).append(addhtml(category[index], collapseArray[index], demographic, color));
-        //creating chart for each demographic
+        // creating html for each chart
+        $(section).append(addhtml(category[index], collapseArray[index], section, demographic, color));
+        // creating chart for each demographic
         create(charts[index], category[index], dataArray, yearArray, demographic, color);
         index++;
         // console.log(demographicArray);
@@ -901,7 +1024,7 @@ function create(chart, category, data, years, title, color) {
     } else if (color === "success") {
         var label = "#00ff00"; //green
     } else {
-        var label = "#0000ff"; //blue
+        var label = "orange"; //orange
     }
     if (chart != undefined) {
         chart.destroy();
@@ -936,19 +1059,16 @@ function create(chart, category, data, years, title, color) {
                     text: title,
                 },
                 
-                //responsive: true,
                 // means that collapse will be smooth
-                // size will be readable on mobile
+                // will be readable on mobile
                 maintainAspectRatio: false,
-                // skipNull: true,
-                // drawNull: false,
                 scales: {
                     yAxes: [{
                         ticks: {
                             beginAtZero: false,
                             callback: function(label, index, values) {
+                                // MAKE LABELS MORE READABLE
                                 return roundLarge(label);
-                                // return roundLarge(values);
                             },
                         }
                     }]
@@ -963,61 +1083,35 @@ function create(chart, category, data, years, title, color) {
 
 // RESET FUNCTION FOR COUNTRY CHARTS
 function resetCharts() {
-    $('.emptyViaJS').empty();
+    // $('.emptyViaJS').empty();
+    $('.accordion').empty();
 };
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-// LOADER FUNCTIONS
+// **** LOADER FUNCTIONS FOR CHARTS ****
 
 // LOADER FUNCTION FOR HTML
-function addhtml(graph, collapseNumber, text, color) {
+function addhtml(graph, collapseNumber, section, text, color) {
 
-    var javaToAdd = 
-    `<a class='btn btn-${color} btn-block mb-1 mb-1' role='button' 
-    data-toggle='collapse'  href='#${collapseNumber}' aria-expanded='false'
-    aria-controls='${collapseNumber}'>
-    ${text} <i class="fas fa-sort-down fa-1x" style="position: absolute; right: 10px;"></i>
-    </a>
-    <div class="collapse" id='${collapseNumber}'>
-        <div class='card-body p-0'>
+    var htmlToAdd = 
+
+    `<div class="card my-1 px-2">
+            <button class="btn btn-outline-${color} btn-block my-2" type="button" data-toggle="collapse" data-target="#${collapseNumber}" aria-expanded="false" aria-controls="${collapseNumber}">
+            ${text} <i class="fas fa-sort-down fa-1x" style="position: absolute; right: 20px;"></i>
+            </button>
+
+        <div id="${collapseNumber}" class="collapse" data-parent="${section}">
+        <div class="card-body p-0">
             <canvas id='${graph}' style='height: 300px width=80%'></canvas>
         </div>
+        </div>
     </div>`
-    return javaToAdd;
+    
+    return htmlToAdd;
 }
-
-// TO ADD MORE CHARTS AMEND THIS FUNC
-// better way of doing this with classes?
-// LOADER FUNCTION FOR CHART CANVAS
-function loadCanvas() {
-    $('#ecoOne').append("<canvas id='ecoGraph1' style='height: 300px width=80%'></canvas>");
-    $('#ecoTwo').append("<canvas id='ecoGraph2' style='height: 300px width=80%'></canvas>");
-    $('#ecoThree').append("<canvas id='ecoGraph3' style='height: 300px width=80%'></canvas>");
-    $('#ecoFour').append("<canvas id='ecoGraph4' style='height: 300px width=80%'></canvas>");
-    $('#ecoFive').append("<canvas id='ecoGraph5' style='height: 300px width=80%'></canvas>");
-    $('#ecoSix').append("<canvas id='ecoGraph6' style='height: 300px width=80%'></canvas>");
-    $('#ecoSeven').append("<canvas id='ecoGraph7' style='height: 300px width=80%'></canvas>");
-    
-    $('#socOne').append("<canvas id='socGraph1' style='height: 300px width=80%'></canvas>");
-    $('#socTwo').append("<canvas id='socGraph2' style='height: 300px width=80%'></canvas>");
-    $('#socThree').append("<canvas id='socGraph3' style='height: 300px width=80%'></canvas>");
-    $('#socFour').append("<canvas id='socGraph4' style='height: 300px width=80%'></canvas>");
-    $('#socFive').append("<canvas id='socGraph5' style='height: 300px width=80%'></canvas>");
-    $('#socSix').append("<canvas id='socGraph6' style='height: 300px width=80%'></canvas>");
-    $('#socSeven').append("<canvas id='socGraph7' style='height: 300px width=80%'></canvas>");
-
-    
-    $('#envOne').append("<canvas id='envGraph1' style='height: 300px width=80%'></canvas>");
-    $('#envTwo').append("<canvas id='envGraph2' style='height: 300px width=80%'></canvas>");
-    $('#envThree').append("<canvas id='envGraph3' style='height: 300px width=80%'></canvas>");
-    $('#envFour').append("<canvas id='envGraph4' style='height: 300px width=80%'></canvas>");
-    $('#envFive').append("<canvas id='envGraph5' style='height: 300px width=80%'></canvas>");
-    $('#envSix').append("<canvas id='envGraph6' style='height: 300px width=80%'></canvas>");
-    $('#envSeven').append("<canvas id='envGraph7' style='height: 300px width=80%'></canvas>");
-};
 
 // TO ADD MORE CHARTS AMEND THIS FUNC
 // LOADER FUNCTION FOR COUNTRY CHARTS
@@ -1061,11 +1155,11 @@ function loadHtmlAndCharts(json) {
     var collapseArray3 = ["envCollapse1", "envCollapse2", "envCollapse3", "envCollapse4", "envCollapse5", "envCollapse6", "envCollapse7"];
     
     // CREATE ECONOMIC GRAPHS
-    createGraphs(json.WorldBankData.economicArray, ecoGraphs, ecoCharts, "#ecoAddViaJS", collapseArray1, "primary");
+    createGraphs(json.economicArray, ecoGraphs, ecoCharts, "#ecoAccordion", collapseArray1, "warning");
     // CREATE SOCIAL GRAPHS
-    createGraphs(json.WorldBankData.socialArray, socGraphs, socCharts, "#socAddViaJS", collapseArray2, "danger");
+    createGraphs(json.socialArray, socGraphs, socCharts, "#socAccordion", collapseArray2, "danger");
     // CREATE ENVIRONMENT GRAPHS
-    createGraphs(json.WorldBankData.environmentArray, envGraphs, envCharts, "#envAddViaJS", collapseArray3, "success");
+    createGraphs(json.environmentArray, envGraphs, envCharts, "#envAccordion", collapseArray3, "success");
 
 }
 
