@@ -7,7 +7,7 @@
     // FUNC TO CONVERT LATLNG TO ISOCODE
     function latLngToIso() {
         // APIKEY
-        $apiKey = 'ceaf93ee5f1b4333b994ddeda2110d75';
+        $apiKey = '';
 
 
         // OPENCAGE URL
@@ -263,7 +263,7 @@
         // FORMAT THE ARRAY TO A STRING JOINED BY ,
         $formattedArray = implode(",", $cityArray);
 
-        $apikey = 'e287cb7241c9ed476e1c47631da7189c';
+        $apikey = '';
 
         //weather
         $url = 'https://api.openweathermap.org/data/2.5/group?id='.$formattedArray.'&units=metric&appid='.$apikey;
@@ -287,7 +287,7 @@
 
 
     function getWebcam($countryCode) {
-        $apikey= "NFserQfugdRFdjOAvJ3smlCEu4KOSX7D";
+        $apikey= "";
 
         // webcam shown in country by popularity and limit 20
         $url = "https://api.windy.com/api/webcams/v2/list/country=".$countryCode."/orderby=popularity/limit=20?show=webcams:player,location&key=".$apikey;
@@ -314,7 +314,7 @@
 
     function getCityAttractions($lat, $lng) {
 
-        $apikey = "5ae2e3f221c38a28845f05b6c0e852c281c2f3d25281de590605778a";
+        $apikey = "";
 
         $url = "https://api.opentripmap.com/0.1/en/places/radius?radius=20000&lon=".$lng."&lat=".$lat."&limit=1000&rate=3&apikey=".$apikey;
 
@@ -355,7 +355,7 @@
 
     function getLandmarkData($placeCode) {
 
-        $apikey = "5ae2e3f221c38a28845f05b6c0e852c281c2f3d25281de590605778a";
+        $apikey = "";
 
         $url = "https://api.opentripmap.com/0.1/en/places/xid/".$placeCode."?apikey=".$apikey;
 
