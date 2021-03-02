@@ -16,10 +16,12 @@
 
         $ch = curl_init();
         // CURL OPTIONS
-        //
+
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
         // returns the results as a string 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
         // sets url to be used
         curl_setopt($ch, CURLOPT_URL, $url);
         
@@ -27,13 +29,11 @@
         $result = curl_exec($ch);
 
         curl_close($ch);
-        // DECODE DATA FOR MANIPULATION
-        // TRUE RETURN ASSOCIATIVE ARRAY
-        $decode = json_decode($result, true);
-        // print_r($decode);
 
-        
-        // only grab isocode as other data is less likely to output anything useful
+        // DECODE DATA FOR MANIPULATION
+        $decode = json_decode($result, true);
+
+        // only grab isocode
         return $decode['results'][0]['components']['ISO_3166-1_alpha-2'];
     };
 

@@ -80,35 +80,40 @@ The program works so that every time you choose a country in the dropdown menu, 
 
         `function latLngToIso() {
         
-        // APIKEY
-        $apiKey = '';
-        
-        // OPENCAGE URL
-        $url = 'https://api.opencagedata.com/geocode/v1/json?q='.strval($_REQUEST['lat']).'+'.strval($_REQUEST['lng']).'&key='.$apiKey;
+            // APIKEY
+            $apiKey = '';
 
-        $ch = curl_init();
-        // CURL OPTIONS
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        // returns the results as a string 
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        // sets url to be used
-        curl_setopt($ch, CURLOPT_URL, $url);
+            // OPENCAGE URL
+            $url = 'https://api.opencagedata.com/geocode/v1/json?q='.strval($_REQUEST['lat']).'+'.strval($_REQUEST['lng']).'&key='.$apiKey;
 
-        // EXECUTE CURL
-        $result = curl_exec($ch);
+            $ch = curl_init();
 
-        curl_close($ch);
-        // DECODE DATA FOR MANIPULATION
-        // TRUE RETURN ASSOCIATIVE ARRAY
-        $decode = json_decode($result, true);
-        // print_r($decode);
+            // CURL OPTIONS
 
-        // only grab isocode
-        return $decode['results'][0]['components']['ISO_3166-1_alpha-2'];
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+            // returns the results as a string 
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+            // sets url to be used
+            curl_setopt($ch, CURLOPT_URL, $url);
+
+            // EXECUTE CURL
+            $result = curl_exec($ch);
+
+            curl_close($ch);
+
+            // DECODE DATA FOR MANIPULATION
+            $decode = json_decode($result, true);
+
+            // only grab isocode
+            return $decode['results'][0]['components']['ISO_3166-1_alpha-2'];
         };
     
         $output = latLngToIso();
+        
         header('Content-Type: application/json; charset=UTF-8');
+        
         echo json_encode($output);`
 
 ## Newest Features
@@ -120,7 +125,7 @@ The program works so that every time you choose a country in the dropdown menu, 
 Project is: _In Progress_, 
 
 ## Demo
-Available to view at: [michaelbracey.co.uk](michaelbracey.co.uk)
+Available to view at: [michaelbracey.co.uk](https://michaelbracey.co.uk/)
 
 ## Contact
 Created by [@Mbrace1](https://github.com/Mbrace1)
