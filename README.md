@@ -16,10 +16,10 @@
 The program works so that every time you choose a country in the dropdown menu, it will update the map with the country border, and provide the user with detailed country information through the use of modals and map markers.
 
 ## Screenshots
-![Example screenshot](./img/screenshot1.png)
-![Example screenshot](./img/screenshot2.png)
-![Example screenshot](./img/screenshot3.png)
-![Example screenshot](./img/screenshot4.png)
+![Example screenshot](./images/screenshot1.png)
+![Example screenshot](./images/screenshot2.png)
+![Example screenshot](./images/screenshot3.png)
+![Example screenshot](./images/screenshot4.png)
 
 ## Technologies Used
 * Html 5 and CSS
@@ -51,7 +51,8 @@ The program works so that every time you choose a country in the dropdown menu, 
 ## API Call Example
 * JS:
     Via and ajax call to the PHP server, data (in this case the latitude and longitude) is sent to retrieve API data (isocode), which in turn calls a function (changes the country in the dropdown menu).
-    `function latLngToIso(latitude, longitude) {
+
+        `function latLngToIso(latitude, longitude) {
         $.ajax({
             url:"php/getApis.php",
             type: 'POST',
@@ -61,33 +62,32 @@ The program works so that every time you choose a country in the dropdown menu, 
             },
             success: function(result) {
                 console.log(result);
-
+        
                 // CHANGE DROPDOWN VALUE
                 $('#countriesDropdown').val(result).change();
-
+        
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 console.log('latLngToIso error')
             }
         });
-    }`
+        }`
     
 * PHP:
     Each API call I have put into it's own separate function, so it is more readable.
     The following shows a call to convert LatLng values to an isocode.
     This workflow is generally repeated for each API, and then finally returned to the user as json.
-    `function latLngToIso() {
+
+        `function latLngToIso() {
+        
         // APIKEY
         $apiKey = '';
-
-
+        
         // OPENCAGE URL
         $url = 'https://api.opencagedata.com/geocode/v1/json?q='.strval($_REQUEST['lat']).'+'.strval($_REQUEST['lng']).'&key='.$apiKey;
 
-
         $ch = curl_init();
         // CURL OPTIONS
-        //
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         // returns the results as a string 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -103,14 +103,13 @@ The program works so that every time you choose a country in the dropdown menu, 
         $decode = json_decode($result, true);
         // print_r($decode);
 
-
         // only grab isocode
         return $decode['results'][0]['components']['ISO_3166-1_alpha-2'];
         };
     
-    $output = latLngToIso();
-    header('Content-Type: application/json; charset=UTF-8');
-    echo json_encode($output);`
+        $output = latLngToIso();
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode($output);`
 
 ## Newest Features
 * Expanded the map layer feature to show many more markers
@@ -124,4 +123,4 @@ Project is: _In Progress_,
 Available to view at: [michaelbracey.co.uk](michaelbracey.co.uk)
 
 ## Contact
-Created by [@Mbrace1](michaelbracey24@gmail.com)
+Created by [@Mbrace1](https://github.com/Mbrace1)
