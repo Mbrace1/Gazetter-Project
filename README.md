@@ -16,10 +16,10 @@
 The program works so that every time you choose a country in the dropdown menu, it will update the map with the country border, and provide the user with detailed country information through the use of modals and map markers.
 
 ## Screenshots
-![Example screenshot](./images/Screenshot1.png)
-![Example screenshot](./images/Screenshot2.png)
-![Example screenshot](./images/Screenshot3.png)
-![Example screenshot](./images/Screenshot4.png)
+![Example screenshot](./images/Screenshot 1.png)
+![Example screenshot](./images/Screenshot 2.png)
+![Example screenshot](./images/Screenshot 3.png)
+![Example screenshot](./images/Screenshot 4.png)
 
 ## Technologies Used
 * Html 5 and CSS
@@ -50,7 +50,7 @@ The program works so that every time you choose a country in the dropdown menu, 
 
 ## API Call Example
 * JS:
-    Via and ajax call to the PHP server, data (in this case the latitude and longitude) is sent to retrieve API data (isocode), which in turn calls a function (changes the country in the dropdown menu).
+    Via an ajax call to the PHP server, data (in this case the latitude and longitude) is sent to retrieve API data (isocode), which in turn calls a function (changes the country in the dropdown menu).
 
         `function latLngToIso(latitude, longitude) {
         $.ajax({
