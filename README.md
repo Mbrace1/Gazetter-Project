@@ -7,7 +7,6 @@
 * [Technologies Used](#technologies-used)
 * [APIs Used](#apis-used)
 * [API Call Example](#api-call-example)
-* [Newest Features](#newest-features)
 * [Status](#status)
 * [Demo](#demo)
 * [Contact](#contact)
@@ -50,7 +49,7 @@ The program works so that every time you choose a country in the dropdown menu, 
 
 ## API Call Example
 * JS:
-    Via an ajax call to the PHP server, data (in this case the latitude and longitude) is sent to retrieve API data (isocode), which in turn calls a function (changes the country in the dropdown menu).
+    Via an ajax call to the PHP server, data (in this case the latitude and longitude) is sent to retrieve the API data (isocode), which in turn calls a function (changing the country in the dropdown menu).
 
         `function latLngToIso(latitude, longitude) {
         $.ajax({
@@ -74,52 +73,82 @@ The program works so that every time you choose a country in the dropdown menu, 
         }`
     
 * PHP:
-    Each API call I have put into it's own separate function, so it is more readable.
-    The following shows a call to convert LatLng values to an isocode.
-    This workflow is generally repeated for each API, and then finally returned to the user as json.
+    The following code shows a generic call to an API using cURL. In this example the API call converts the latitude and longitude (from the ajax request before) to an isocode.
+    
+        `function apiCall($url) {
 
-        `function latLngToIso() {
-        
-            // APIKEY
-            $apiKey = '';
-
-            // OPENCAGE URL
-            $url = 'https://api.opencagedata.com/geocode/v1/json?q='.strval($_REQUEST['lat']).'+'.strval($_REQUEST['lng']).'&key='.$apiKey;
-
+            //  START CURL
             $ch = curl_init();
 
             // CURL OPTIONS
-
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
-            // returns the results as a string 
+            // RETURNS RESULT AS STRING
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-            // sets url to be used
+            // SET URL TO BE USED
             curl_setopt($ch, CURLOPT_URL, $url);
 
             // EXECUTE CURL
             $result = curl_exec($ch);
 
+            // CLOSE CURL
             curl_close($ch);
 
             // DECODE DATA FOR MANIPULATION
             $decode = json_decode($result, true);
 
-            // only grab isocode
-            return $decode['results'][0]['components']['ISO_3166-1_alpha-2'];
-        };
-    
-        $output = latLngToIso();
+            // RETURN DATA
+            return $decode;
+        }
+        
+        // apiKey
+        $apiKey = "ceaf93ee5f1b4333b994ddeda2110d75";
+        // specific url
+        $url = 'https://api.opencagedata.com/geocode/v1/json?q='.strval($_REQUEST['lat']).'+'.strval($_REQUEST['lng']).'&key='.$apiKey;
+        // call generic curl func
+        $apiData = apiCall($url);
+        // data we want
+        if (array_key_exists('ISO_3166-1_alpha-2', $apiData['results'][0]['components'])) {
+            $output = $apiData['results'][0]['components']['ISO_3166-1_alpha-2'];
+        } else {
+            $output = "Not A Country";
+        }
         
         header('Content-Type: application/json; charset=UTF-8');
-        
         echo json_encode($output);`
 
-## Newest Features
-* Expanded the map layer feature to show many more markers
-* Markers for Webcams
-* Markers for Landmarks
+    All the calls to APIs use this function to get data, but some of the data retrieved is more complex and requires further formatting before being sent back to the site as json. For Example:  
+    
+        `function getWorldBank($arr, $isocode) {
+
+            // DATA WILL GO TO LATEST YEAR
+            $endYear = date("Y");
+            // ARRAY TO ADD RETURNED WB COUNTRY DATA
+            $outputArray = [];
+
+            // LOOP EACH WB ARRAY (3 in total)
+            foreach ($arr as $mainKey => $value) {
+                // JOIN AS SINGLE STRING (3 strings)
+                $joinAsString = implode(";", $value);
+                // CALLS WB API *3 WITH EACH STRING
+                $url = 'https://api.worldbank.org/v2/country/'.strtolower($isocode).'/indicator/'.$joinAsString.'?per_page=800&source=2&date=1968:'.$endYear.'&format=json';
+                $result = apiCall($url);
+                // FORMAT USEFUL RESULT DATA
+                for ($i=0; $i < count($result[1]); $i++) {
+                    // json looks like this:
+                    // Category ($mainKey) -> demographic ([$result[1][$i]['indicator']['value'])-> year ($result[1][$i]['date']) -> value ($result[1][$i]['value'])
+                    //  eg economic -> gdp -> 2012 -> 250000
+                    $outputArray[$mainKey][$result[1][$i]['indicator']['value']][$result[1][$i]['date']] = $result[1][$i]['value'];
+                };
+            };
+
+            return $outputArray;
+
+        };`
+    
+    This function accepts **$arr** (which is a cutom made array containing all the demographic data codes I want to ask the API for), and **$isocode** (the country code sent from the site via ajax) as arguements. It then calls the function **apiCall** three times. This is beacause the API has a limit on the amount of demographic data codes you can send in a request.
+    
+    It is then formatted into easy to read json and sent back to the site, which jquery can then display.  
+
 
 ## Status
 Project is: _In Progress_, 

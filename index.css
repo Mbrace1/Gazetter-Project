@@ -1,26 +1,61 @@
 
-.leaflet-control-zoom  {
-    margin-bottom: 35px!important;
+/* general style */
+html {
+    scroll-behavior: smooth;
 }
 
+body {
+    background-color: #bbb8b4;
+    height: 100vh;
+}
+
+/* google translate hide bar and tooltips*/
+.goog-te-banner-frame.skiptranslate {display: none !important;} 
+body { top: 0px !important; }
+
+.goog-tooltip {
+    display: none !important;
+}
+.goog-tooltip:hover {
+    display: none !important;
+}
+.goog-text-highlight {
+    background-color: transparent !important;
+    border: none !important; 
+    box-shadow: none !important;
+}
+
+/* zoom position */
+.leaflet-control-zoom  {
+    margin-bottom: 85px!important;
+}
+
+/* easy button bar width */
 .leaflet-touch .leaflet-bar a {
     width: 40px!important;
 }
 
-
-#countriesDropdown {
-    background-color: white;
-    color: black;
+.leaflet-touch .leaflet-bar button{
+    width: 40px!important;
 }
 
+/* #countriesDropdown {
+    background-color: white;
+    color: black;
+} */
+
+/* layer control size */
 .leaflet-touch .leaflet-control-layers-toggle {
     width: 40px!important;
     height: 30px!important;
 }
 
+/* distance between leaflet buttons */
 .leaflet-control-layers-overlays {
 	margin-bottom: 20px;
 }
+
+/* easy button colours */
 #button-overview {
     color: blue;    
 }
@@ -37,44 +72,33 @@
     color: red;
 }
 
-.leaflet-touch .leaflet-bar button{
-    width: 40px!important;
-}
-
-
-html {
-    scroll-behavior: smooth;
-}
-
-body {
-    background-color: #bbb8b4;
-    height: 100vh;
-}
-
-
+/* container full width */
 .container-fluid{
     padding: 0;
 }
 
+/* navbar position over map */
 .navbar {
     z-index: 98;
-    color:#6b97c3!important;
 }
 
-
+/* modal accordion button borders */
 .btn-outline-danger, .btn-outline-success, .btn-outline-warning {
     border: 2px solid black !important;
     color: black;
 }
 
-
-
+/* accordion containers */
 .card {
     background-color: transparent;
     border: none;
 }
 
+.card-body {
+    height: 300px;
+}
 
+/* map styling */
 #map {
     z-index: 1;
     position: absolute;
@@ -83,6 +107,7 @@ body {
     width: 100%;
 }
 
+/* legend styling */
 .legend {
     background-color:rgba(255, 255, 255, 0.75);
 }
@@ -91,7 +116,6 @@ body {
     font-size: 12px;
     text-align: center;
 }
-
 
 .legend span, .legend label {
     display: block;
@@ -108,7 +132,7 @@ body {
 }
 
 
-#sidebar {
+/* #sidebar {
     display: flex;
     position: fixed;
     z-index: 99;
@@ -116,9 +140,9 @@ body {
     width: 100%;
     bottom: 0;
     right:0;
-}
+} */
 
-
+/* loading image styling */
 #loading {
     width: 100%;
     height: 100%;
@@ -139,36 +163,29 @@ body {
     position:fixed;
 }
 
-/* delete? */
-.chart {
-    margin: 10px;
-    background-color:#E4DBDB;
-    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
-    padding: 2px 16px;
-    border-radius: 5px;
-}
-
-
+/* modal data rows eg modal overview data */
 .row {
     margin-right: auto;
     margin-left: auto;
 }
 
-.initiallyHidden {
-    display:none;
-}
- 
-.card-body {
-    height: 300px;
-}
 
+/* .initiallyHidden {
+    display:none;
+} */
+
+/* modal styling */
 .modal-dialog,
 .modal-content {
     height: 80%;
 }
 
+.modal-header .close {
+    padding: 0rem 0rem!important;
+    margin: -2rem 0rem -1rem -1rem!important;
+}
 
-
+/* modal body distance from top */
 .placeholderClass {
     margin-top: 20px;
 }
@@ -185,9 +202,9 @@ body {
     padding: .25rem;
 }
 
-.countryTitle {
+/* .countryTitle {
     position:relative;
-}
+} */
 
 
 /* popup */
@@ -196,9 +213,13 @@ body {
     text-align: center !important;
 }
 
-.leaflet-popup-content {
+/* .leaflet-popup-content {
     margin: 15px!important;
 }
+
+.leaflet-popup-content {
+    width: auto;
+} */
 
 .flag {
     display: block;
@@ -210,7 +231,7 @@ body {
     text-align: center;
 }
 
-
+/* modal header and footer styling */
 #ecoHeader,#envHeader,#socHeader, #cityHeader {
     border-bottom: 2px solid black;
     color: white;
@@ -237,12 +258,8 @@ body {
     background-color: #007bffb8;
 } 
 
-.leaflet-popup-content {
-    width: auto;
-}
 
-
-/* modal INFO */
+/* modal INFO in the footer*/
 
 .table {
     color: inherit!important;
@@ -263,6 +280,16 @@ th, tr, td {
 
 }
 
+
+/* webcam video style*/
+
+#webcamVid {
+    border: 4px solid white;
+}
+
+
+/* CSS FOR MARKERS */
+
 .weatherIcon {
     border-radius: 100px;
     border: 1px solid white;
@@ -270,15 +297,6 @@ th, tr, td {
     height: 25px; 
     width: 25px;
 }
-
-
-/* webcam */
-
-#webcamVid {
-    border: 4px solid white;
-}
-
-/* CSS FOR MARKERS */
 
 .weatherIcon:hover {
     background-color: #7d7d7dd1;
@@ -324,25 +342,29 @@ th, tr, td {
 
 @media only screen and (max-width: 768px) {
 
+    /* Gazetter title position center */
     .navbar-brand {
         margin-right: 0 !important;
     }
-
+    
+    /* modal size decreased */
     .modal-dialog,
     .modal-content {
-        /* 80% of window height */
         height: 90%;
     }
     
+    /*  currently not working */
     .fas .fa-sort-down .fa-1x {
         display:none;
     }
 
+    /* space between leafelt buttons decreased */
     .leaflet-bar {
         margin-top: 1px!important;
         /* margin-bottom: 100px!important; */
     }
 
+    /* legend size decreased */
     .legend span, .legend label {
         width: 25px;
         font-size: 50%;
@@ -351,12 +373,14 @@ th, tr, td {
 }
 
 @media only screen and (max-width: 400px) {
+    /* layer control small with scroll */
     .leaflet-control-layers-expanded {
         height: 100px;
         overflow-y: scroll;
         overflow-x: hidden;
     }
 
+    /* modal close button small */
     .btn btn-secondary {
         font-size: .875rem!important;
     }

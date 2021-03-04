@@ -412,7 +412,7 @@ function getDropdownData(earthquakeMag, faults) {
         url:"php/getApis.php",
         type: 'POST',
         success: function(result) {
-            // console.log(result);
+            console.log(result);
             var plateGeojson = result.plates;
             var earthquakeGeojson = result.earthquakes;
             // LOOP RESULT AND ADD TO DROPDOWN
@@ -425,17 +425,23 @@ function getDropdownData(earthquakeMag, faults) {
             addEarthquakeLayer(plateGeojson, earthquakeGeojson, earthquakeMag, faults);
 
             //  GET USERS CURRENT COUNTRY VIA GEOLOCATION
-            navigator.geolocation.getCurrentPosition(function (position) {
+            try {
+                navigator.geolocation.getCurrentPosition(function (position) {
                 myLat = position.coords.latitude;
                 myLong = position.coords.longitude;
                 mymap.setView([myLat, myLong], 10);
                 // CALL TO SERVER TO CONVERT LATLNG TO ISOCODE
                 latLngToIso(myLat, myLong);
             
-            });
+                });
+            } catch {
+                mymap.setView([25, 25], 10);
+            }
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            console.log(' error')
+            console.log('Could not get dropdown data');
+            alert('Could not get countries for dropdown');
+            hideLoading();
         }
     });
 }
@@ -511,6 +517,14 @@ function getCountry(countryCode, geoJSON, airportLayer, webcamLayer, cityLayer, 
                     // behavior: 'smooth', not working
                   });
             });
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            // console.log('Country unavailable at this time');
+            alert('Country unavailable at this time');
+            // console.log(jqXHR);
+            // console.log(textStatus);
+            // console.log(errorThrown);
+            hideLoading();
         }
     });
 }
@@ -528,13 +542,17 @@ function latLngToIso(latitude, longitude) {
         },
         success: function(result) {
             console.log(result);
-
-            // CHANGE DROPDOWN VALUE
-            $('#countriesDropdown').val(result).change();
-
+            if (result === "Not A Country") {
+                alert("Not A Country");
+            } else {
+                // CHANGE DROPDOWN VALUE
+                $('#countriesDropdown').val(result).change();
+            }
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            console.log('latLngToIso error')
+            console.log('latLngToIso error');
+            alert('Not a country');
+            hideLoading();
         }
     });
 }
