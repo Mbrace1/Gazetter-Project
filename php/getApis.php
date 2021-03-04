@@ -200,7 +200,7 @@
         /////////////////////////////////////////////////////////////////////////////////////////////////
         // weather
         // apiKey
-        $weatherApiKey = 'e287cb7241c9ed476e1c47631da7189c';
+        $weatherApiKey = ' ';
         // use cityArray from before
         $formattedArray = implode(",", $cityIdArray);
         // weather url
@@ -245,7 +245,7 @@
     //  check to send converted lat lng to iso
     } elseif(isset($_REQUEST['lat']) and isset($_REQUEST['lng'])) {
         // apiKey
-        $apiKey = "ceaf93ee5f1b4333b994ddeda2110d75";
+        $apiKey = " ";
         // specific url
         $url = 'https://api.opencagedata.com/geocode/v1/json?q='.strval($_REQUEST['lat']).'+'.strval($_REQUEST['lng']).'&key='.$apiKey;
         // call generic curl func
@@ -260,7 +260,7 @@
     //  check to send city attractions
     } elseif(isset($_REQUEST['cityLat']) and isset($_REQUEST['cityLng'])) {
         // apiKey
-        $apiKey = "5ae2e3f221c38a28845f05b6c0e852c281c2f3d25281de590605778a ";
+        $apiKey = " ";
         // specific url
         $url = "https://api.opentripmap.com/0.1/en/places/radius?radius=20000&lon=".$_REQUEST['cityLng']."&lat=".$_REQUEST['cityLat']."&limit=1000&rate=3&apikey=".$apiKey;
         // call generic curl func
@@ -285,7 +285,7 @@
     //  check to send city landmark details
     } elseif(isset($_REQUEST['landmark'])) {
         // apiKey
-        $apiKey = "5ae2e3f221c38a28845f05b6c0e852c281c2f3d25281de590605778a ";
+        $apiKey = " ";
         // specific url
         $url = "https://api.opentripmap.com/0.1/en/places/xid/".$_REQUEST['landmark']."?apikey=".$apiKey;
         // call generic curl func
