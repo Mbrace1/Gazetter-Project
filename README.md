@@ -43,7 +43,6 @@ The program works so that every time you choose a country in the dropdown menu, 
 * World Bank [link](https://data.worldbank.org/)
 * Windy Webcams [link](https://api.windy.com/webcams)
 * Opentripmap [link](https://opentripmap.io/)
-* USGS Earthquakes [link](https://earthquake.usgs.gov/fdsnws/event/1/)
 * OSM-world-airports [link](https://babel.opendatasoft.com/explore/dataset/osm-world-airports/information/)
 * Geonames Cities [link](https://public.opendatasoft.com/explore/dataset/geonames-all-cities-with-a-population-1000/information/?disjunctive.country)
 
