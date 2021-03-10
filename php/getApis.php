@@ -138,21 +138,11 @@
 
         });
 
-        // EARTHQUAKE URL (USGS)
-        $earthquakesUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_month.geojson";
-        $earthquakesResult = apiCall($earthquakesUrl);
-
-        // PLATES GEOJSON URL FROM  FRAXEN'S GITHUB
-        $plateBoundaries = "https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_boundaries.json";
-        $plateGeojsonResult = apiCall($plateBoundaries);
-
         $output['status']['code'] = "200";
         $output['status']['name'] = "ok";
         $output['status']['description'] = "success";
         $output['status']['executedIn'] = intval((microtime(true) - $executionStartTime) * 1000) . " ms";
         $output['data'] = $country;
-        $output['earthquakes'] = $earthquakesResult;
-        $output['plates'] = $plateGeojsonResult;
 
         return $output;
         
@@ -178,7 +168,7 @@
             $largeCitiesArray[$largeCities['records'][$i]['fields']['name']] = $largeCities['records'][$i]['fields'];
         };
         /////////////////////////////////////////////////////////////////////////////////////////////////
-        // this will be used for finding each cities weather
+        // this will be used for filtering cities from the citylist json file
         $cityIdArray = [];
 
         // ids for countries for weather api
@@ -189,20 +179,48 @@
             // and then loop large array to find its id
             foreach($cityIds as $id) {
                 // check for match, both same city and country
+
                 if ((strtolower($city['name']) === strtolower($id['name'])) and (strtolower($CC)  === strtolower($id['country']))) {
                     // append to array
-                    $cityIdArray[] = $id['id'];
-                    //only match with first id
+                    // $cityIdArray[] = $id['id'];
+                    $cityIdArray[] = $id;
+                }
+            }
+        }
+
+        // array will be used to get weather for cities
+        $idForWeather = [];
+
+        // loop to remove re-occuring cities in the country
+        // ie two Houstons in America, only Houston with lat lng value will be used for weather api
+        foreach($largeCitiesArray as $city) {
+            foreach ($cityIdArray as $id) {
+                // to match exact city with code
+                // lat lng value must fall inside a range of
+                // 0.02 either side
+                // ($min <= $value) && ($value <= $max)
+                $valueLat = $city['coordinates'][0];
+                $inRangeLatLower = $id['coord']['lat'] - 0.02;
+                $inRangeLatUpper = $id['coord']['lat'] + 0.02;
+
+                $valueLon = $city['coordinates'][1];
+                $inRangeLonLower = $id['coord']['lon'] - 0.02;
+                $inRangeLonUpper = $id['coord']['lon'] + 0.02;
+                
+                if((($inRangeLatLower <= $valueLat) && ($valueLat <= $inRangeLatUpper)) and (($inRangeLonLower <= $valueLon) && ($valueLon <= $inRangeLonUpper))) {
+                    // append weather id array for use in weather api
+                    $idForWeather[] = $id['id'];
                     break;
                 }
             }
         }
+
         /////////////////////////////////////////////////////////////////////////////////////////////////
         // weather
         // apiKey
-        $weatherApiKey = ' ';
+        $weatherApiKey = 'e287cb7241c9ed476e1c47631da7189c';
         // use cityArray from before
-        $formattedArray = implode(",", $cityIdArray);
+        $formattedArray = implode(",", $idForWeather);
         // weather url
         $cityWeatherUrl = 'https://api.openweathermap.org/data/2.5/group?id='.$formattedArray.'&units=metric&appid='.$weatherApiKey;
         // call curl func for city weather
@@ -217,6 +235,9 @@
         // MORE COMPLEX
         $output['data']['border'] = getCountry($CC);
         $output['data']['worldBank'] = getWorldBank($worldBankArray, $CC);
+        // $output['data']['cities'] = $cityIds;
+        // $output['data']['citiesformatted'] = $cityIdArrayFurtherFormat;
+        $output['data']['citiesweather'] = $cityIdArray;
 
         $output['data']['border']['properties']['cities'] = $largeCitiesArray;
         $output['data']['border']['properties']['cityWeather'] = $cityWeather; 
@@ -245,7 +266,7 @@
     //  check to send converted lat lng to iso
     } elseif(isset($_REQUEST['lat']) and isset($_REQUEST['lng'])) {
         // apiKey
-        $apiKey = " ";
+        $apiKey = "ceaf93ee5f1b4333b994ddeda2110d75";
         // specific url
         $url = 'https://api.opencagedata.com/geocode/v1/json?q='.strval($_REQUEST['lat']).'+'.strval($_REQUEST['lng']).'&key='.$apiKey;
         // call generic curl func
@@ -260,7 +281,7 @@
     //  check to send city attractions
     } elseif(isset($_REQUEST['cityLat']) and isset($_REQUEST['cityLng'])) {
         // apiKey
-        $apiKey = " ";
+        $apiKey = "5ae2e3f221c38a28845f05b6c0e852c281c2f3d25281de590605778a ";
         // specific url
         $url = "https://api.opentripmap.com/0.1/en/places/radius?radius=20000&lon=".$_REQUEST['cityLng']."&lat=".$_REQUEST['cityLat']."&limit=1000&rate=3&apikey=".$apiKey;
         // call generic curl func
@@ -285,7 +306,7 @@
     //  check to send city landmark details
     } elseif(isset($_REQUEST['landmark'])) {
         // apiKey
-        $apiKey = " ";
+        $apiKey = "5ae2e3f221c38a28845f05b6c0e852c281c2f3d25281de590605778a ";
         // specific url
         $url = "https://api.opentripmap.com/0.1/en/places/xid/".$_REQUEST['landmark']."?apikey=".$apiKey;
         // call generic curl func

@@ -7,14 +7,10 @@ $(document).ready(function() {
     $('.js-example-basic-single').select2();
 });
 
-// GLOBAL LAYER GROUPS
-var earthquakeMag = new L.layerGroup();
-var faults  = new L.layerGroup();
-
 // LOADING SYMBOL ON PAGE LOAD
 showLoading();
 // CALL INITIAL DATA FOR COUNTRY DROPDOWN AND GLOBAL LAYERS
-getDropdownData(earthquakeMag, faults);
+getDropdownData();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -22,9 +18,9 @@ getDropdownData(earthquakeMag, faults);
 //  ****   LEAFLET LAYERS, BUTTONS AND CONTROLS   ****
 
 // FUNC TO PLACE LEAFLET BUTTONS
-function CheckScreenSize() {
-    return 'bottomleft';
-};
+// function CheckScreenSize() {
+//     return 'topright';
+// };
 
 // BASEMAPS
 // NORMAL MAP VIEW
@@ -35,14 +31,6 @@ var CartoDB_Voyager = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles
     minZoom: 3,
     maxZoom: 19
 });
-// DARK MAP VIEW
-var CartoDB_DarkMatter = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-	subdomains: 'abcd',
-    minZoom: 3,
-    maxZoom: 19
-});
-
 
 // MORE LAYERS
 // LANDMARKS
@@ -130,7 +118,7 @@ var cityLayer = new L.featureGroup().on('click', function(e) {
             addMarkerToLandmarks(historic, '<i class="fas fa-monument" style="color: red;"></i>');
             addMarkerToLandmarks(natural, '<i class="fas fa-tree" style="color: green;"></i>');
             addMarkerToLandmarks(religious, '<i class="fas fa-place-of-worship" style="color: blue;"></i>');
-            addMarkerToLandmarks(other, '<i class="fas fa-landmark" style="color: black;"></i>');
+            addMarkerToLandmarks(other, '<i class="fas fa-landmark" style="color: gold;"></i>');
 
             // FUNC GIVES EACH CATEGORY A CUSTOM MARKER
             function addMarkerToLandmarks(category, symbol) {
@@ -176,7 +164,7 @@ var webcamLayer = new L.featureGroup().on('click', function (e) {
     $('#webcamVid').attr("src", id[4]);
     // LINK
     if (id[3] != undefined) {
-        $('#webcamWiki').html(`<a href="${id[3]}">${id[3]}</a>`);
+        $('#webcamWiki').html(`<a style="color:black;" href="${id[3]}">${id[3]}</a>`);
     } else {
         $('#webcamWiki').html('No Wikipedia Page Available');
     }
@@ -192,37 +180,51 @@ var popLayer = new L.LayerGroup();
 // CREATING MYMAP VARIABLE
 var mymap = L.map('map', {
     // attributionControl: false,
-    layers: [CartoDB_Voyager, weatherLayer], // LAYERS ON MAP LOAD
-    zoomControl: false,
+    layers: [CartoDB_Voyager, weatherLayer, webcamLayer, airportLayer], // LAYERS ON MAP LOAD
+    // zoomControl: false,
 });
 
 // LAYER CONTROL CATEGORIES
-var basemaps = {
-    "Light": CartoDB_Voyager,
-    "Dark": CartoDB_DarkMatter,
-}
+// var basemaps = {
+//     "Light": CartoDB_Voyager,
+//     // "Dark": CartoDB_DarkMatter,
+// }
 var overlayMaps = {
     // City Layers
     "<b>Largest Cities</b>": {
-        [`Weather`]: weatherLayer,
-        [`Population <i class="far fa-circle" style="color: black;background-color: #ff00009e;border-radius: 100px;"></i>`]: popLayer,
-        [`Landmarks <i class="fas fa-city" style="opacity: 0.8; color: white; text-shadow: 0 0 5px #2b36e8;""></i>`]: cityLayer,
+        [`<span style="color: #00a1ff; line-height: 1em;" class="fa-stack fa-lg">
+            <i style="text-shadow: 0px 4px 4px black;" class="fas fa-map-marker fa-stack-2x" aria-hidden="true"></i>
+            <i class="fa-stack-1x fa-inverse">
+                <img class="weatherImg" src="https://openweathermap.org/img/wn/04d.png" height="25px" width="25px" alt="Weather icon">
+            </i>
+        </span>
+        Weather`]: weatherLayer,
+        [`<span style="color: #2b36e8;" class="fa-stack fa-lg">
+            <i style="text-shadow: 0px 4px 4px black;" class="fas fa-map-marker fa-stack-2x" aria-hidden="true"></i>
+            <i style="font-size: 0.75em;" class="fas fa-city fa-stack-1x fa-inverse" aria-hidden="true"></i>
+        </span>
+        Landmarks`]: cityLayer,
+        [`<i class="far fa-circle fa-2x" style="color: black;background-color: #ff00009e;border-radius: 100px; margin-left: 8px; margin-right: 7px;"></i> Population`]: popLayer,
     },
     "<b>Other</b>": {
-        [`Popular Webcams <i class="fas fa-video" style="height: 10px;width: 10px; color: #2b36e8; text-shadow: 0 0 5px #2b36e8;"></i>`]: webcamLayer,
-        [`Airports <i class="fas fa-plane" style="height: 10px;width: 10px;color:orange; text-shadow: 0 0 5px #2b36e8;"></i>`]: airportLayer
-    },
-    "<b>Global</b>": {
-        [`Earthquake Actvity`]: earthquakeMag,
-        [`Plate Boundaries`]: faults
+        [`<span style="color: grey; opacity: 0.9;" class="fa-stack fa-sm">
+            <i style="text-shadow: 0px 4px 4px black;" class="fas fa-map-marker fa-stack-2x" aria-hidden="true"></i>
+            <i style="color: white; font-size: 0.75em;" class="fas fa-video fa-stack-1x" aria-hidden="true"></i>
+        </span>
+        Popular Webcams`]: webcamLayer,
+        [`<span style="color: orange; opacity: 0.9;" class="fa-stack fa-sm">
+            <i style="text-shadow: 0px 4px 4px black;" class="fas fa-map-marker fa-stack-2x"></i>
+            <i style="color: red; font-size: 0.75em;" class="fas fa-plane fa-stack-1x"></i>
+        </span>
+        Airports`]: airportLayer
     }
 };
 
 
 // ADD ZOOM CONTROL TO MYMAP - FIRST BUTTON TO BE ADDED
-L.control.zoom({
-     position: CheckScreenSize(),
-}).addTo(mymap);
+// L.control.zoom({
+//      position: CheckScreenSize(),
+// }).addTo(mymap);
 // L.control.layers(baseMaps).addTo(mymap);
 
 // GETTING MYMAP BOUNDS
@@ -304,7 +306,7 @@ var editBar = L.easyBar([
     buttonSocial,
     buttonEnviron,
     
-], {position: CheckScreenSize()});
+]);
 
 
 // EASYBUTTON CONTROL - SECOND BUTTON TO BE ADDED
@@ -313,12 +315,11 @@ editBar.addTo(mymap);
 // LAYER CONTROL OPTIONS
 var options = {
     // Make the "Landmarks" group exclusive (use radio inputs)
-    position: CheckScreenSize(),
     exclusiveGroups: ["<b>Largest Cities</b>"],
   };
 
 // ADD LAYER CONTROL TO MYMAP - THIRD BUTTON TO BE ADDED
-var layerControl = L.control.groupedLayers(basemaps, overlayMaps, options);
+var layerControl = L.control.groupedLayers(null, overlayMaps, options);
 mymap.addControl(layerControl);
 
 // LANDMARK LAYER POSITION
@@ -332,7 +333,7 @@ landmarkLeg.onAdd = function (map) {
         (`<p> <i style="color: red;" class="fas fa-monument"></i> Historic</p>
         <p> <i style="color: green;" class="fas fa-tree"></i> Natural</p>
         <p> <i style="color: blue;" class="fas fa-place-of-worship"></i> Religious</p>
-        <p> <i style="color: black;" class="fas fa-landmark"></i> Other</p>`);
+        <p> <i style="color: gold;" class="fas fa-landmark"></i> Other</p>`);
 
     return div;
 };
@@ -403,26 +404,23 @@ $('#countriesDropdown').change(function() {
     // CALL TO SERVER WITH COUNTRY ISO CODE
     getCountry($('#countriesDropdown').val(), geoJSON, airportLayer, webcamLayer, cityLayer, weatherLayer, popLayer);
 
+    
 });
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //  FUNC TO GET ISOCODES FOR DROPDOWN
-function getDropdownData(earthquakeMag, faults) {
+function getDropdownData() {
     $.ajax({
         url:"php/getApis.php",
         type: 'POST',
         success: function(result) {
             console.log(result);
-            var plateGeojson = result.plates;
-            var earthquakeGeojson = result.earthquakes;
             // LOOP RESULT AND ADD TO DROPDOWN
             for(i = 0; i < result.data.length; i++) {
                 // FORMAT DROPDOWN
                 $('#countriesDropdown').append(`<option value="${result.data[i].code}">${result.data[i].name}</option>`);
     
             }
-            //  CALL TO CREATE EARTHQUAKE AND PLATE GLOBAL LAYERS
-            addEarthquakeLayer(plateGeojson, earthquakeGeojson, earthquakeMag, faults);
 
             //  GET USERS CURRENT COUNTRY VIA GEOLOCATION
             try {
@@ -435,7 +433,7 @@ function getDropdownData(earthquakeMag, faults) {
             
                 });
             } catch {
-                mymap.setView([25, 25], 10);
+                mymap.setView([53, 1], 10);
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
@@ -460,12 +458,13 @@ function getCountry(countryCode, geoJSON, airportLayer, webcamLayer, cityLayer, 
         success: function(result) {
             hideLoading();
             console.log(result);
+            // console.log(result.data.border.geometry.coordinates[0].getBounds())
             // console.log('got server data')
 
             // ADD GEOJSON
             var countryGeojson = result.data.border;
             geoJSON.addData(countryGeojson);
-            
+
             // SET STYLE FOR COUNTRY
             mymap._layers[$('#countriesDropdown').val()].setStyle({
                 weight: 3,
@@ -559,116 +558,18 @@ function latLngToIso(latitude, longitude) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  **** FUNCS TO ADD MARKERS TO LAYERS ****
 
-// EARTHQUAKE MARKERS
-function addEarthquakeLayer(plateGeojson, earthquakes, earthquakeMag, faults) {
-    // get plate lat, lng (format output = (lng, lat))
-    var plateCoordinates = [];
-    for (var j = 0; j < plateGeojson.features.length; j++) {
-    var latLngPairs = [];
-    for (var k = 0; k < plateGeojson.features[j].geometry.coordinates.length; k++) {
-        latLngPairs.push([plateGeojson.features[j].geometry.coordinates[k][1], plateGeojson.features[j].geometry.coordinates[k][0]])
-    }
-    plateCoordinates.push(latLngPairs)
-    }
-
-    // SCALE OF EARTHQUAKE
-    function markerSize(earthquake_mag) {
-        return earthquake_mag * 15000;
-    }
-
-
-    for (var i = 0; i < earthquakes.features.length; i++) {
-            (L.circle([+earthquakes.features[i].geometry.coordinates[1], +earthquakes.features[i].geometry.coordinates[0]], {
-                fillOpacity: 0.6,
-                color: getColorQuake(+earthquakes.features[i].properties.mag),
-                fillColor: getColorQuake(+earthquakes.features[i].properties.mag),
-                radius: markerSize(+earthquakes.features[i].properties.mag)
-            }).bindPopup(
-                `<div style="text-align:center;">
-                    <h6> ${earthquakes.features[i].properties.place} </h6> 
-                    <hr style="margin-top: 0; margin-bottom: 0;">
-                    <div class="row d-block mb-1 mt-1">
-                        <span class="text-primary">Earthquake Magnitude</span>
-                    </div>
-                    <div class="row d-block mb-1 mt-1">
-                        <span>${earthquakes.features[i].properties.mag}</span>
-                    </div>
-                    <hr style="margin-top: 0; margin-bottom: 0;">  
-                    <div class="row d-block mb-1 mt-1">
-                        <span class="text-primary">Earthquake Depth (km)</span>
-                    </div> 
-                    <div class="row d-block mb-1 mt-1">
-                        <span>${earthquakes.features[i].geometry.coordinates[2]}</span>
-                    </div>  
-                    <hr style="margin-top: 0; margin-bottom: 0;"> 
-                    <div class="row d-block mb-1 mt-1">
-                        <span class="text-primary">Significance Rating</span>
-                    </div>  
-                    <div class="row d-block mb-1 mt-1">
-                        <span>${earthquakes.features[i].properties.sig}</span>
-                    </div>  
-                    <hr style="margin-top: 0; margin-bottom: 0;"> 
-                    <div class="row d-block mb-1 mt-1">
-                        <span class="text-primary">Time</span>
-                    </div>  
-                    <div class="row d-block mb-1 mt-1">
-                        <span>${new Date(earthquakes.features[i].properties.time)}</span>
-                    </div>
-                </div>`)
-        ).addTo(earthquakeMag);
-    }
-
-
-    for (var m = 0; m < plateCoordinates.length; m++) {
-            (L.polyline(plateCoordinates[m], {
-                color: "#0060d6",
-            }).bindPopup("<h6>" + plateGeojson.features[m].properties.Name + "</h6>")
-        ).addTo(faults);
-    }
-
-    // LEGEND
-    var earthquakeLegend;
-    var mags = [2, 3, 4, 5, 6];
-    var leg = legendCreateAndAdd(earthquakeLegend, `Magnitude (Past Month)`, mags, getColorQuake);
-
-        // ADD/REMOVE LAYER ON CHANGE
-    mymap.on('overlayadd', function (eventLayer) {
-        if (eventLayer.name === `Earthquake Actvity`) {
-            mymap.setZoom(2, {duration: 10.0});
-            leg.addTo(mymap);
-        } 
-        if (eventLayer.name === `Plate Boundaries`) {
-            mymap.setZoom(2, {duration: 10.0});
-        }
-    });
-
-    mymap.on('overlayremove', function (eventLayer) {
-        if (eventLayer.name === `Earthquake Actvity`) {
-            this.removeControl(leg);
-        } 
-    });
-
-    // COLOUR SCHEME FOR EARTHQUAKES AND LEGEND
-    function getColorQuake(d) {
-        return d >= 6 ? '#bd0026' :
-            d >= 5 ? '#f03b20' :
-            d >= 4 ? '#fd8d3c' :
-            d >= 3 ? '#feb24c' :
-            d >= 2 ? '#fed976' :
-                    '#ffffb2';
-    }
-
-}
-
-
 //  AIRPORT FUNC
 function loadAirports(airports, airportLayer) {
 
     var airportIcon = L.divIcon({
-        html: '<i class="fas fa-plane" style="color:orange; text-shadow: 0 0 5px #2b36e8;"></i>',
+        // html: '<i class="fas fa-plane" style="color:orange; text-shadow: 0 0 5px #2b36e8;"></i>',
+        html: `<span style="color: orange; opacity: 0.9;"class="fa-stack fa-sm">
+                    <i style="text-shadow: 0px 4px 4px black;" class="fas fa-map-marker fa-stack-2x"></i>
+                    <i style="color: red; font-size: 0.75em;" class="fas fa-plane fa-stack-1x"></i>
+                </span>`,
         iconSize: [10, 10],
-        iconAnchor: [5, 10],
-        popupAnchor: [0, -10],
+        iconAnchor: [15, 25],
+        popupAnchor: [0, -20],
         className: 'planeIcon'
     });
 
@@ -713,9 +614,12 @@ function loadWebcam(webcams, webcamLayer) {
     $.each(webcams, function() {
 
         var webcamIcon = L.divIcon({
-            html: '<i class="fas fa-video" style="; color: #2b36e8; text-shadow: 0 0 5px #2b36e8;"></i>',
+            html: `<span style="color: grey; opacity: 0.9;"class="fa-stack fa-sm">
+                        <i style="text-shadow: 0px 4px 4px black;" class="fas fa-map-marker fa-stack-2x"></i>
+                        <i style="color: white; font-size: 0.75em;" class="fas fa-video fa-stack-1x"></i>
+                    </span>`,
             iconSize: [10, 10],
-            iconAnchor: [5, 10],
+            iconAnchor: [15, 25],
             popupAnchor: [15, -10],
             className: 'webcamIcon',
             id: [this.location.city, this.location.region, this.location.country, this.location.wikipedia, this.player.day.embed]
@@ -745,18 +649,24 @@ function loadCities(cities, capital, cityLayer) {
 
         // city marker styles
         var starIcon = L.divIcon({
-            html: '<i class="fas fa-star fa-2x" style="opacity: 0.8; color: #ffc107; text-shadow: 0 0 5px #000;"></i>',
+            html: `<span style="color: #2b36e8;"class="fa-stack fa-lg">
+                        <i style="text-shadow: 0px 4px 4px black;" class="fas fa-map-marker fa-stack-2x"></i>
+                        <i style="color: #ffc107;" class="fas fa-star fa-stack-1x fa-inverse"></i>
+                    </span>`,
             iconSize: [10, 10],
-            iconAnchor: [5, 10],
+            iconAnchor: [15, 25],
             popupAnchor: [15, -10],
             className: 'capitalIcon',
             id: `${this.name}`
         });
-
+        // <i class="fas fa-map-marker"><i class="fas fa-city" style="opacity: 0.8; color: white; text-shadow: 0 0 5px #000;"></i></i>
         var cityIcon = L.divIcon({
-            html: '<i class="fas fa-city" style="opacity: 0.8; color: white; text-shadow: 0 0 5px #000;"></i>',
+            html: `<span style="color: #2b36e8;"class="fa-stack fa-lg">
+                        <i style="text-shadow: 0px 4px 4px black;" class="fas fa-map-marker fa-stack-2x"></i>
+                        <i style="font-size: 0.75em;" class="fas fa-city fa-stack-1x fa-inverse"></i>
+                    </span>`,
             iconSize: [10, 10],
-            iconAnchor: [5, 10],
+            iconAnchor: [15, 25],
             popupAnchor: [15, -10],
             className: 'cityIcon',
             id: `${this.name}`
@@ -835,14 +745,19 @@ function loadWeather(weather, weatherLayer) {
         var pressure = this.main.pressure;
         var windDirection = this.wind.deg;
         var windSpeed = this.wind.speed;
-
+        // <div class="weatherIcon">
+        // <img class="weatherImg" src="https://openweathermap.org/img/wn/${icon}.png" height="25px" width="25px"alt="Weather icon">
+        // </div>
         var weatherIcon = L.divIcon({
-            html: `<div class="weatherIcon">
-                        <img class="weatherImg" src="https://openweathermap.org/img/wn/${icon}.png" height="25px" width="25px"alt="Weather icon">
-                    </div>`,
+            html: `<span style="color: #00a1ff; line-height: 1em;"class="fa-stack fa-lg">
+                        <i style="text-shadow: 0px 4px 4px black;" class="fas fa-map-marker fa-stack-2x"></i>
+                        <i class="fa-stack-1x fa-inverse">
+                            <img class="weatherImg" src="https://openweathermap.org/img/wn/${icon}.png" height="25px" width="25px"alt="Weather icon">
+                        </i>
+                    </span>`,
             iconSize: [10, 10],
-            iconAnchor: [20, 20],
-            popupAnchor: [-5, -20],
+            iconAnchor: [15, 25],
+            popupAnchor: [5, -20],
             className: 'iconWeather'
         });
 
@@ -930,49 +845,6 @@ function showLoading() {
 // LOADING GIF HIDE
 function hideLoading() {
     $("#loading").hide();
-}
-
-// LEGEND CREATOR - FOR EARTHQUAKES
-function legendCreateAndAdd(name, label, scaleArray, colorScheme) {
-
-    name = L.control({position: 'bottomright'});
-
-    name.onAdd = function () {
-
-    var div = L.DomUtil.create('div', `${label} legend`);
-    // TITLE
-    div.innerHTML += `<h6 id="legendTitle">${label}</h6>`;
-    // COLOUR
-    for (var i = 0; i < scaleArray.length; i++) {
-        div.innerHTML +=
-            '<span style="background:' + colorScheme(scaleArray[i]) + '"></span> ';
-    }
-
-    // BREAK
-    div.innerHTML += '<br>';
-
-    // SCALE
-    for (var i = 0; i < scaleArray.length; i++) {
-        if (i === 0) {
-            div.innerHTML +=
-            '<label>&le; ' + roundLarge(scaleArray[i]) + '</label>';
-        } else if (i === scaleArray.length - 1) {
-            div.innerHTML +=
-            '<label>' + roundLarge(scaleArray[i]) + ' &le;</label>';
-        } else {
-            div.innerHTML +=
-            '<label>' + roundLarge(scaleArray[i]) + '</label>';
-        }
-    }
-
-    //  LINK
-    div.innerHTML += '<br>';
-    div.innerHTML += `<p><a href="https://earthquake.usgs.gov/fdsnws/event/1/" target="_blank">USGS Earthquakes</a></p>`;
-    div.innerHTML += `<p><a href="https://github.com/fraxen/tectonicplates" target="_blank">Fraxen Github</a> </p>`;
-    
-    return div;
-    };
-    return name;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1117,7 +989,7 @@ function addhtml(graph, collapseNumber, section, text, color) {
     var htmlToAdd = 
 
     `<div class="card my-1 px-2">
-            <button class="btn btn-outline-${color} btn-block my-2" type="button" data-toggle="collapse" data-target="#${collapseNumber}" aria-expanded="false" aria-controls="${collapseNumber}">
+            <button class="btn btn-${color} btn-block my-2" type="button" data-toggle="collapse" data-target="#${collapseNumber}" aria-expanded="false" aria-controls="${collapseNumber}">
             ${text} <i class="fas fa-sort-down fa-1x" style="position: absolute; right: 20px;"></i>
             </button>
 

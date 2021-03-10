@@ -9,6 +9,10 @@ body {
     height: 100vh;
 }
 
+a, a:hover, a:active {
+    color: white;
+}
+
 /* google translate hide bar and tooltips*/
 .goog-te-banner-frame.skiptranslate {display: none !important;} 
 body { top: 0px !important; }
@@ -25,9 +29,30 @@ body { top: 0px !important; }
     box-shadow: none !important;
 }
 
-/* zoom position */
-.leaflet-control-zoom  {
-    margin-bottom: 85px!important;
+/* popup */
+.leaflet-popup-content-wrapper {
+    padding: 2px !important;
+    text-align: center !important;
+}
+
+.leaflet-popup-content {
+    width: auto;
+}
+
+/* leaflet button styles */
+.leaflet-control-layers, .leaflet-control-layers-expanded {
+    /* background-color: white!important; */
+    box-shadow: 0 1px 5px rgb(0 0 0 / 65%);
+    /* border: 2px solid grey; */
+}
+
+.leaflet-bar {
+    box-shadow: 0 1px 5px rgb(0 0 0 / 65%);
+}
+
+/* top and bottom further inwards */
+.leaflet-top {
+    top: 100px!important;
 }
 
 /* easy button bar width */
@@ -39,11 +64,6 @@ body { top: 0px !important; }
     width: 40px!important;
 }
 
-/* #countriesDropdown {
-    background-color: white;
-    color: black;
-} */
-
 /* layer control size */
 .leaflet-touch .leaflet-control-layers-toggle {
     width: 40px!important;
@@ -52,7 +72,7 @@ body { top: 0px !important; }
 
 /* distance between leaflet buttons */
 .leaflet-control-layers-overlays {
-	margin-bottom: 20px;
+	margin-bottom: 10px;
 }
 
 /* easy button colours */
@@ -80,12 +100,23 @@ body { top: 0px !important; }
 /* navbar position over map */
 .navbar {
     z-index: 98;
+    margin: 0 auto;
+    width: 50%;
+    /* background: transparent; */
+}
+
+#navbar-content {
+    box-shadow: 0 1px 5px rgb(0 0 0 / 65%);
+    background: white!important;
+    border: 2px solid rgba(0,0,0,0.2);
+    border-radius: 5px;
 }
 
 /* modal accordion button borders */
-.btn-outline-danger, .btn-outline-success, .btn-outline-warning {
-    border: 2px solid black !important;
-    color: black;
+.btn-danger, .btn-success, .btn-warning {
+    /* border: 2px solid black !important; */
+    background-color: #475056;
+    color: white;
 }
 
 /* accordion containers */
@@ -125,22 +156,19 @@ body { top: 0px !important; }
     text-align: center;
     font-size: 70%;
 }
+
 .legend p {
     margin-bottom: 0;
     text-align: center;
     font-size: 10px;
 }
 
+.legend.leaflet-control {
+    border: 2px solid grey;
+    border-radius: 5px;
+    box-shadow: 0px 0px 10px 1px #777777!important;
+}
 
-/* #sidebar {
-    display: flex;
-    position: fixed;
-    z-index: 99;
-    background: white;
-    width: 100%;
-    bottom: 0;
-    right:0;
-} */
 
 /* loading image styling */
 #loading {
@@ -169,11 +197,6 @@ body { top: 0px !important; }
     margin-left: auto;
 }
 
-
-/* .initiallyHidden {
-    display:none;
-} */
-
 /* modal styling */
 .modal-dialog,
 .modal-content {
@@ -191,7 +214,8 @@ body { top: 0px !important; }
 }
 
 .modal-body {
-    background-color: #dcdcdc;
+    /* background-color: rgb(0 0 255 / 20%); */
+    background-color: #d5e8eb;
 }
 .modal-header {
     display: block;
@@ -202,44 +226,31 @@ body { top: 0px !important; }
     padding: .25rem;
 }
 
-/* .countryTitle {
-    position:relative;
-} */
-
-
-/* popup */
-.leaflet-popup-content-wrapper {
-    padding: 2px !important;
-    text-align: center !important;
-}
-
-/* .leaflet-popup-content {
-    margin: 15px!important;
-}
-
-.leaflet-popup-content {
-    width: auto;
-} */
-
+/* country flag */
 .flag {
     display: block;
     width: 100%;
-    opacity: 0.5;
+    /* opacity: 0.5; */
 } 
 
 .modal-content {
     text-align: center;
+    border: 2px solid black !important;
 }
 
 /* modal header and footer styling */
-#ecoHeader,#envHeader,#socHeader, #cityHeader {
+#overviewHeader, #ecoHeader,#envHeader,#socHeader, #cityHeader, #webcamHeader {
     border-bottom: 2px solid black;
     color: white;
 }
 
-#ecoFooter,#envFooter,#socFooter, #cityFooter {
+#overviewFooter, #ecoFooter,#envFooter,#socFooter, #cityFooter, #webcamFooter {
     border-top: 2px solid black;
     color: white;
+}
+
+#webcamHeader, #webcamFooter {
+    background-color: grey;
 }
 
 #ecoHeader, #ecoFooter {
@@ -258,9 +269,11 @@ body { top: 0px !important; }
     background-color: #007bffb8;
 } 
 
+#overviewHeader, #overviewFooter {
+    background-color: #007bff;
+}
 
-/* modal INFO in the footer*/
-
+/* modal table in the footer*/
 .table {
     color: inherit!important;
 }
@@ -287,58 +300,30 @@ th, tr, td {
     border: 4px solid white;
 }
 
-
 /* CSS FOR MARKERS */
 
-.weatherIcon {
-    border-radius: 100px;
-    border: 1px solid white;
-    background-color: #ffffff5c;
-    height: 25px; 
-    width: 25px;
-}
-
-.weatherIcon:hover {
-    background-color: #7d7d7dd1;
-    border: 1px solid black;
-}
-
-.weatherIcon:active {
-    background-color: #7d7d7dd1;
-    border: 1px solid black;
-}
-
-.fa-city:hover {
+.fa-stack.fa-lg:hover {
     color: black!important;
-    text-shadow: 0px 0px 0px #000000;
+    text-shadow: 0px 4px 4px white;
 }
 
-.fa-city:active {
+.fa-stack.fa-lg:active {
   color: black!important;
-  transform: translateY(2px);
-  text-shadow: 0px 0px 0px #000000;
-}
-
-.fa-star:hover {
-    text-shadow: 1px 1px 20px #ffc107!important;
-}
-
-.fa-star:active {
-    text-shadow: 1px 1px 20px #ffc107!important;
-}
-
-.fa-video:hover {
-    color: #f8f9fa!important;
-}
-
-.fa-video:active {
-  color: #f8f9fa!important;
+  text-shadow: 0px 4px 4px white;
   transform: translateY(4px);
 }
 
-.fa-landmark:active {
-    transform: translateY(2px);
+.fa-stack.fa-sm:hover {
+    color: black!important;
+    text-shadow: 0px 4px 4px white;
 }
+
+.fa-stack.fa-sm:active {
+  color: black!important;
+  text-shadow: 0px 4px 4px white;
+  transform: translateY(4px);
+}
+
 
 @media only screen and (max-width: 768px) {
 
@@ -347,6 +332,10 @@ th, tr, td {
         margin-right: 0 !important;
     }
     
+    #navbar-content {
+        padding-bottom: .5rem!important;
+    }
+
     /* modal size decreased */
     .modal-dialog,
     .modal-content {
@@ -358,28 +347,30 @@ th, tr, td {
         display:none;
     }
 
-    /* space between leafelt buttons decreased */
-    .leaflet-bar {
-        margin-top: 1px!important;
-        /* margin-bottom: 100px!important; */
-    }
-
     /* legend size decreased */
     .legend span, .legend label {
         width: 25px;
-        font-size: 50%;
+        /* font-size: 50%; */
     }
 
+    .leaflet-control-layers-expanded {
+        height: 200px;
+        overflow-y: scroll;
+        overflow-x: hidden;
+    }
+
+    .info.legend.leaflet-control {
+        margin-bottom: 50px;
+    }
 }
 
-@media only screen and (max-width: 400px) {
+@media only screen and (max-height: 400px) {
     /* layer control small with scroll */
     .leaflet-control-layers-expanded {
         height: 100px;
         overflow-y: scroll;
         overflow-x: hidden;
     }
-
     /* modal close button small */
     .btn btn-secondary {
         font-size: .875rem!important;
