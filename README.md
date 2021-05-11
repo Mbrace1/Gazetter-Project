@@ -39,6 +39,7 @@ The program works so that every time you choose a country in the dropdown menu, 
 
 ## How To Use
 Create a config.php file within the php folder. Then write the following code:
+
     `return array(
     'weatherApi' => '', // create an account at https://openweathermap.org/api to get an API key
     'webcamApi' => '', // create an account at https://api.windy.com/webcams to get an API key
