@@ -28,11 +28,11 @@ The program works so that every time you choose a country in the dropdown menu, 
 * Font Awesome [link](https://fontawesome.com/)
 * Leaflet Maps 1.7.1 [link](https://leafletjs.com/)
 * Leaflet Plugins
-    * Easy Button [link](https://github.com/CliffCloud/Leaflet.EasyButton)
-    * Marker Cluster [link](https://github.com/Leaflet/Leaflet.markercluster)
-    * Grouped Layer Control [link](https://github.com/ismyrnow/leaflet-groupedlayercontrol)
+    * Easy Button  2.4.0 [link](https://github.com/CliffCloud/Leaflet.EasyButton)
+    * Marker Cluster 1.4.1 [link](https://github.com/Leaflet/Leaflet.markercluster)
+    * Grouped Layer Control 0.6.1 [link](https://github.com/ismyrnow/leaflet-groupedlayercontrol)
 * Other plugins
-    * Chart JS 2.9.4 [link](https://www.chartjs.org/)
+    * Chart JS 3.2.1 [link](https://www.chartjs.org/)
     * Select2 4.1.0 [link](https://select2.org/)
     * Google Translate Tutotrial [link](https://www.w3schools.com/howto/howto_google_translate.asp)
 
@@ -144,7 +144,10 @@ The program works so that every time you choose a country in the dropdown menu, 
 
         };`
     
-    This function accepts **$arr** (which is a cutom made array containing all the demographic data codes I want to ask the API for), and **$isocode** (the country code sent from the site via ajax) as arguements. It then calls the function **apiCall** three times. This is beacause the API has a limit on the amount of demographic data codes you can send in a request.
+    This function accepts the arguements: 
+    * **$arr** - a custom made array containing all the demographic data codes I want to ask the API for. 
+    * **$isocode** - the country code sent from the site via ajax. 
+    It then calls the function **apiCall** three times. This is beacause the world bank API has a limit on the amount of demographic data codes you can send in a request.
     
     It is then formatted into easy to read json and sent back to the site, which jquery can then display.  
 
