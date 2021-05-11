@@ -5,6 +5,7 @@
 * [General info](#general-info)
 * [Screenshots](#screenshots)
 * [Technologies Used](#technologies-used)
+* [How To Use](#how-to-use)
 * [APIs Used](#apis-used)
 * [API Call Example](#api-call-example)
 * [Status](#status)
@@ -35,6 +36,15 @@ The program works so that every time you choose a country in the dropdown menu, 
     * Chart JS 3.2.1 [link](https://www.chartjs.org/)
     * Select2 4.1.0 [link](https://select2.org/)
     * Google Translate Tutotrial [link](https://www.w3schools.com/howto/howto_google_translate.asp)
+
+## How To Use
+Create a config.php file within the php folder. Then write the following code:
+    `return array(
+    'weatherApi' => '', // create an account at https://openweathermap.org/api to get an API key
+    'webcamApi' => '', // create an account at https://api.windy.com/webcams to get an API key
+    'openCageApi' => '', // create an account at https://opencagedata.com/ to get an API key
+    'opentripmapApi' => '', // create an account at https://opentripmap.io/ to get an API key
+    );`
 
 ## APIs Used
 * Rest Countries [link](https://restcountries.eu/)
