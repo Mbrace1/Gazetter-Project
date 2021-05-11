@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="author" content="Michael Bracey">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">       
+         <!--BOOTSTRAP -->
+        <link rel="stylesheet" href="./vendor/css/bootstrap/bootstrap.min.css">
+        <!-- CUSTOM CSS -->
+        <link rel="stylesheet" href="./libs/css/index.css">
+        <!-- LEAFLET -->
+        <link rel="stylesheet" href="./vendor/css/leaflet/leaflet.css">
+        <script src="./vendor/js/leaflet/leaflet.js"></script>
+        <!-- LEAFLET PLUGIN GROUPED LAYER CONTROL-->
+        <link src="./vendor/css/leafletLayerControl/leaflet.groupedlayercontrol.min.css">
+        <script src="./vendor/js/leafletLayerControl/leaflet.groupedlayercontrol.min.js"></script>
+        <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-groupedlayercontrol/0.6.1/leaflet.groupedlayercontrol.min.js.map"></script> -->
+        <!-- LEAFLET EASY BUTTON PLUGIN -->
+        <link rel="stylesheet" href="./vendor/css/leafletEasyButton/easy-button.css">
+        <script src="./vendor/js/leafletEasyButton/easy-button.js"></script>
+        <!-- MARKERCLUSTER PLUGIN -->
+        <link rel="stylesheet" href="./vendor/css/leafletMarkerCluster/MarkerCluster.css"></link>
+        <link rel="stylesheet" href="./vendor/css/leafletMarkerCluster/MarkerCluster.Default.css"></link>
+        <script src="./vendor/js/leafletMarkerCluster/leaflet.markercluster.js"></script>
+        <!-- CHART JS -->
+        <script src="./vendor/js/chartJS/chart.js"></script>
+        <!-- FONTAWESOME -->
+        <script src="https://kit.fontawesome.com/03f96d2b7e.js" crossorigin="anonymous"></script>
+        <!-- DROPDOWN PLUGIN -->
+        <link href="./vendor/css/selectDropdown/select2.min.css" rel="stylesheet"/>        
+        <title>Profiling Countries</title>
+
+    </head>
+
+    <body>
+        <!-- LOADING GIF -->
+        <div id="loading">
+            <img id="loading-image" src="./images/ajax-loader.gif" alt="Loading..." />
+        </div>
+        <!-- NAV -->
+        <nav class="navbar" id="navbar">
+            <div class="container-fluid justify-content-center">
+                <ul id="navbar-content" class="nav justify-content-center px-5">
+                    <!-- PROJECT TITLE -->
+                    <li class="navbar-brand">GAZETTEER</li>
+                    <!-- COUNTRY DROPDOWN -->
+                    <li class="nav-item dropdown my-auto" style="width:150px;">
+                        <select class="js-example-basic-single" style="width: 100%" id="countriesDropdown">
+                            <!-- JS ADDS COUNTRY OPTIONS -->
+                        </select>
+                    </li>
+                </ul>    
+            </div>
+            
+        </nav>
+
+        <!-- MODALS --> 
+
+        <!-- OVERVIEW -->
+        <div class="modal fade" id="modalCountryOverview" tabindex="-1" role="dialog" aria-labelledby="modalCountryOverview" data-backdrop="true">
+            <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header" id="overviewHeader">
+                    <!-- MODAL TITLE -->
+                    <h5>Overview</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- OVERVIEW BODY -->
+                    <div id="overview">
+                        <div class="container mt-2">
+                            <div class="container w-50">
+                                <div class="row">
+                                    <span><img class="flag" src="" alt="flag"><!-- FLAG --></span>
+                                </div>
+                            </div>    
+                            <hr>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <span class="text-primary">Capital</span>
+                                </div>
+                                <div class="col-sm-6">
+                                    <span id="capital"> <!-- CAPITAL --> </span>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <span class="text-primary">Population</span>
+                                </div>
+                                <div class="col-sm-6">
+                                    <span id="population"> <!-- POPULATION --> </span>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <span class="text-primary">Size</span>
+                                </div>
+                                <div class="col-sm-6">
+                                    <span id="size"> <!-- SIZE --> </span>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <span class="text-primary">Currency</span>
+                                </div>
+                                <div class="col-sm-6">
+                                    <span id="currency"> <!-- CURRENCY --> </span>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <span class="text-primary">Languages</span>
+                                </div>
+                                <div class="col-sm-6">
+                                    <span id="languages"> <!-- LANGUAGES --> </span>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <span class="text-primary">Wikipedia page</span>
+                                </div>
+                                <div class="col-sm-6">
+                                    <!-- WIKI -->
+                                    <span id="wikiArticle"><a class="text-secondary" id="wikiLink" href="#" target="_blank"></a></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" id="overviewFooter">
+                    <!-- OVERIVEW DATA INFO -->
+                    <table class="table table-sm table-borderless"> 
+                        <thead>
+                            <tr>
+                            <th>Data From:</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                            <td><a href="https://restcountries.eu/" target="_blank">https://restcountries.eu/</a></td>
+                            </tr>
+                            <tr>
+                                <td><span> <a href="https://opencagedata.com/" target="_blank">https://opencagedata.com/</a></span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- ECONOMY -->
+        <div class="modal fade" id="modalCountryEconomy" tabindex="-1" role="dialog" aria-labelledby="modalCountryEconomy" data-backdrop="true">
+            <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header" id="ecoHeader">
+                    <h5>Economy</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- ECONOMY BODY -->
+                    <div id="economy" class="placeholderClass">
+                        <div class="accordion" id="ecoAccordion"></div>
+                        <!-- ADDED AND DELETED VIA JS -->
+                    </div>
+                </div>
+                <div class="modal-footer" id="ecoFooter">
+                    <!-- ECONOMY DATA INFO -->
+                    <table class="table table-sm table-borderless"> 
+                        <tbody>
+                            <tr>
+                                <th>Data From:</th>
+                            </tr>
+                            <tr>
+                                <td><a href="https://data.worldbank.org/" target="_blank">https://data.worldbank.org/</td>
+                            </tr>
+                            <tr>
+                                <th>Charts From:</th>
+                            </tr>
+                            <tr>
+                                <td><a href="https://www.chartjs.org/" target="_blank">https://www.chartjs.org/</td>
+                            </tr>
+                            <tr>
+                                <td>*Some datasets will not be available for all countries*</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- ENVIRONMENT -->
+        <div class="modal fade" id="modalCountryEnvironment" tabindex="-1" role="dialog" aria-labelledby="modalCountryEnvironment" data-backdrop="true">
+            <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header" id="envHeader">
+                    <h5>Environment</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- OVERVIEW TAB -->
+                    <div id="environment" class="placeholderClass">
+                        <div class="accordion" id="envAccordion"></div>
+                        <!-- <div id="envAddViaJS" class="emptyViaJS">
+                        </div> -->
+                    </div>
+                </div>
+                <div class="modal-footer" id="envFooter">
+                    <table class="table table-sm table-borderless"> 
+                        <tbody>
+                            <tr>
+                                <th>Data From:</th>
+                            </tr>
+                            <tr>
+                                <td><a href="https://data.worldbank.org/" target="_blank">https://data.worldbank.org/</td>
+                            </tr>
+                            <tr>
+                                <th>Charts From:</th>
+                            </tr>
+                            <tr>
+                                <td><a href="https://www.chartjs.org/" target="_blank">https://www.chartjs.org/</td>
+                            </tr>
+                            <tr>
+                                <td>*Some datasets will not be available for all countries*</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- SOCIAL -->
+        <div class="modal fade" id="modalCountrySocial" tabindex="-1" role="dialog" aria-labelledby="modalCountrySocial" data-backdrop="true">
+            <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header" id="socHeader">
+                    <h5>Social</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- OVERVIEW TAB -->
+                    <div id="social" class="placeholderClass">
+                        <div class="accordion" id="socAccordion"></div>
+                        <!-- <div id="socAddViaJS" class="emptyViaJS">
+                        </div> -->
+                    </div>
+                </div>
+                <div class="modal-footer" id="socFooter">
+                    <table class="table table-sm table-borderless"> 
+                        <tbody>
+                            <tr>
+                                <th>Data From:</th>
+                            </tr>
+                            <tr>
+                                <td><a href="https://data.worldbank.org/" target="_blank">https://data.worldbank.org/</td>
+                            </tr>
+                            <tr>
+                                <th>Charts From:</th>
+                            </tr>
+                            <tr>
+                                <td><a href="https://www.chartjs.org/" target="_blank">https://www.chartjs.org/</td>
+                            </tr>
+                            <tr>
+                                <td>*Some datasets will not be available for all countries*</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- City Modal -->
+        <div class="modal fade" id="modalCity" tabindex="-1" role="dialog" aria-labelledby="modalCity" data-backdrop="true">
+            <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header" id="cityHeader">
+                    <h5 id="landmarkName">city</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <div id="google_translate_element"></div>
+                </div>
+                <div class="modal-body" id="cityBody">
+                    <!-- cities added here via js-->
+                    
+                    
+                </div>
+                <div class="modal-footer" id="cityFooter">
+                    <table class="table table-sm table-borderless"> 
+                        <thead>
+                            <tr>
+                            <th>Data From:</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                            <td><a href="https://opentripmap.io/" target="_blank">https://opentripmap.io/</td>
+                            </tr>
+                            <tr>
+                            <td>*Some Landmarks Info will be in it's native language*</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- Webcam Modal -->
+        <div class="modal fade" id="modalWebcam" tabindex="-1" role="dialog" aria-labelledby="modalWebcam" data-backdrop="true">
+            <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header" id="webcamHeader">
+                    <h5 id="webcamName">webcam</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="webcamBody">
+                    <!-- webcam added here via js-->
+                    <div class="embed-responsive embed-responsive-16by9">
+                        <iframe id="webcamVid" class="embed-responsive-item" src="" allowfullscreen></iframe>
+                    </div>
+                    <div>
+                        <span id="webcamWiki">No Wikipedia Page Available</span>
+                    </div>
+                </div>
+                <div class="modal-footer" id="webcamFooter">
+                    <table class="table table-sm table-borderless"> 
+                        <thead>
+                            <tr>
+                            <th>Data From:</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                            <td><a href="https://api.windy.com/webcams" target="_blank">https://api.windy.com/webcams</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+            </div>
+        </div>
+
+
+        <!-- MAP -->
+        <div class="container-fluid">
+            <div id="map"></div>
+        </div>
+
+        <!-- SCRIPTS -->
+        <!-- JQUERY SCRIPT -->
+        <script src="./vendor/js/jquery/jquery-3.6.0.min.js"></script>
+        <!-- DROPDOWN -->
+        <script src="./vendor/js/selectDropdown/select2.min.js"></script>
+        <!-- BOOTSTRAP -->
+        <script src="./vendor/js/bootstrap/bootstrap.min.js"></script>
+        <!-- GOOGLE TRANSLATE FOR LANDMARKS -->
+        <script type="text/javascript">
+            function googleTranslateElementInit() {
+              new google.translate.TranslateElement(null, 'google_translate_element');
+            }
+        </script>
+        <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+        <!-- MY SCRIPT -->
+        <!-- <script type='text/javascript' src='./libs/js/config.js'></script> -->
+        <script src="./libs/js/script.js" ></script>
+
+    </body>
+</html>

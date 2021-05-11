@@ -1,0 +1,374 @@
+
+/* general style */
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: #bbb8b4;
+    height: 100vh;
+}
+
+a, a:hover, a:active {
+    color: white;
+}
+
+/* google translate hide bar and tooltips*/
+.goog-te-banner-frame.skiptranslate {display: none !important;} 
+body { top: 0px !important; }
+
+.goog-tooltip {
+    display: none !important;
+}
+.goog-tooltip:hover {
+    display: none !important;
+}
+.goog-text-highlight {
+    background-color: transparent !important;
+    border: none !important; 
+    box-shadow: none !important;
+}
+
+/* popup */
+.leaflet-popup-content-wrapper {
+    padding: 2px !important;
+    text-align: center !important;
+}
+
+.leaflet-popup-content {
+    width: auto;
+}
+
+/* leaflet button styles */
+.leaflet-control-layers, .leaflet-control-layers-expanded {
+    /* background-color: white!important; */
+    box-shadow: 0 1px 5px rgb(0 0 0 / 65%);
+    /* border: 2px solid grey; */
+}
+
+.leaflet-bar {
+    box-shadow: 0 1px 5px rgb(0 0 0 / 65%);
+}
+
+/* top and bottom further inwards */
+.leaflet-top {
+    top: 100px!important;
+}
+
+/* easy button bar width */
+.leaflet-touch .leaflet-bar a {
+    width: 40px!important;
+}
+
+.leaflet-touch .leaflet-bar button{
+    width: 40px!important;
+}
+
+/* layer control size */
+.leaflet-touch .leaflet-control-layers-toggle {
+    width: 40px!important;
+    height: 30px!important;
+}
+
+/* distance between leaflet buttons */
+.leaflet-control-layers-overlays {
+	margin-bottom: 10px;
+}
+
+/* easy button colours */
+#button-overview {
+    color: blue;    
+}
+
+#button-economy {
+    color: orange;
+}
+
+#button-environ {
+    color: green;
+}
+
+#button-social{
+    color: red;
+}
+
+/* container full width */
+.container-fluid{
+    padding: 0;
+}
+
+/* navbar position over map */
+.navbar {
+    z-index: 98;
+    margin: 0 auto;
+    width: 50%;
+    /* background: transparent; */
+}
+
+#navbar-content {
+    box-shadow: 0 1px 5px rgb(0 0 0 / 65%);
+    background: white!important;
+    border: 2px solid rgba(0,0,0,0.2);
+    border-radius: 5px;
+}
+
+/* modal accordion button borders */
+.btn-danger, .btn-success, .btn-warning {
+    /* border: 2px solid black !important; */
+    background-color: #475056;
+    color: white;
+}
+
+/* accordion containers */
+.card {
+    background-color: transparent;
+    border: none;
+}
+
+.card-body {
+    height: 300px;
+}
+
+/* map styling */
+#map {
+    z-index: 1;
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 100%;
+}
+
+/* legend styling */
+.legend {
+    background-color:rgba(255, 255, 255, 0.75);
+}
+
+#legendTitle {
+    font-size: 12px;
+    text-align: center;
+}
+
+.legend span, .legend label {
+    display: block;
+    width: 45px;
+    height: 9px;
+    float: left;
+    text-align: center;
+    font-size: 70%;
+}
+
+.legend p {
+    margin-bottom: 0;
+    text-align: center;
+    font-size: 10px;
+}
+
+.legend.leaflet-control {
+    border: 2px solid grey;
+    border-radius: 5px;
+    box-shadow: 0px 0px 10px 1px #777777!important;
+}
+
+
+/* loading image styling */
+#loading {
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    position: fixed;
+    background-color: rgba(255, 255, 255, 0.75);
+    z-index: 99;
+    text-align: center;
+}
+  
+#loading-image {
+    margin:auto;
+    left:0;
+    right:0;
+    top:0;
+    bottom:0;
+    position:fixed;
+}
+
+/* modal data rows eg modal overview data */
+.row {
+    margin-right: auto;
+    margin-left: auto;
+}
+
+/* modal styling */
+.modal-dialog,
+.modal-content {
+    height: 80%;
+}
+
+.modal-header .close {
+    padding: 0rem 0rem!important;
+    margin: -2rem 0rem -1rem -1rem!important;
+}
+
+/* modal body distance from top */
+.placeholderClass {
+    margin-top: 20px;
+}
+
+.modal-header {
+    display: block;
+}
+
+.modal-footer {
+    flex-wrap: nowrap;
+    padding: .25rem;
+}
+
+/* country flag */
+.flag {
+    display: block;
+    width: 100%;
+    /* opacity: 0.5; */
+} 
+
+.modal-content {
+    text-align: center;
+    border: 2px solid black !important;
+}
+
+/* modal header and footer styling */
+#overviewHeader, #ecoHeader,#envHeader,#socHeader, #cityHeader, #webcamHeader {
+    border-bottom: 2px solid black;
+    color: white;
+}
+
+#overviewFooter, #ecoFooter,#envFooter,#socFooter, #cityFooter, #webcamFooter {
+    border-top: 2px solid black;
+    color: white;
+}
+
+#webcamHeader, #webcamFooter {
+    background-color: grey;
+}
+
+#ecoHeader, #ecoFooter {
+    background-color: orange;
+}
+
+#envHeader, #envFooter {
+    background-color: #28a745;
+}
+
+#socHeader, #socFooter {
+    background-color: #dc3545;
+}
+
+#cityHeader, #cityFooter {
+    background-color: #007bffb8;
+} 
+
+#overviewHeader, #overviewFooter {
+    background-color: #007bff;
+}
+
+/* modal table in the footer*/
+.table {
+    color: inherit!important;
+}
+
+.table.table-sm.table-light {
+    margin-top: 20px!important;
+}
+
+.table.table-sm.table-borderless {
+    font-size: 10px!important;
+}
+
+
+th, tr, td {
+    padding: 0 !important;
+    margin: 0 !important;
+
+}
+
+
+/* webcam video style*/
+
+#webcamVid {
+    border: 4px solid white;
+}
+
+/* CSS FOR MARKERS */
+
+.fa-stack.fa-lg:hover {
+    color: black!important;
+    text-shadow: 0px 4px 4px white;
+}
+
+.fa-stack.fa-lg:active {
+  color: black!important;
+  text-shadow: 0px 4px 4px white;
+  transform: translateY(4px);
+}
+
+.fa-stack.fa-sm:hover {
+    color: black!important;
+    text-shadow: 0px 4px 4px white;
+}
+
+.fa-stack.fa-sm:active {
+  color: black!important;
+  text-shadow: 0px 4px 4px white;
+  transform: translateY(4px);
+}
+
+
+@media only screen and (max-width: 768px) {
+
+    /* Gazetter title position center */
+    .navbar-brand {
+        margin-right: 0 !important;
+    }
+    
+    #navbar-content {
+        padding-bottom: .5rem!important;
+    }
+
+    /* modal size decreased */
+    .modal-dialog,
+    .modal-content {
+        height: 90%;
+    }
+    
+    /*  currently not working */
+    .fas .fa-sort-down .fa-1x {
+        display:none;
+    }
+
+    /* legend size decreased */
+    .legend span, .legend label {
+        width: 25px;
+        /* font-size: 50%; */
+    }
+
+    .leaflet-control-layers-expanded {
+        height: 200px;
+        overflow-y: scroll;
+        overflow-x: hidden;
+    }
+
+    .info.legend.leaflet-control {
+        margin-bottom: 50px;
+    }
+}
+
+@media only screen and (max-height: 400px) {
+    /* layer control small with scroll */
+    .leaflet-control-layers-expanded {
+        height: 100px;
+        overflow-y: scroll;
+        overflow-x: hidden;
+    }
+    /* modal close button small */
+    .btn btn-secondary {
+        font-size: .875rem!important;
+    }
+}
