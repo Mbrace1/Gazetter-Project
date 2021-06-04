@@ -167,7 +167,7 @@ Create a config.php file within the php folder. Then write the following code:
 Project is: _In Progress_, 
 
 ## Demo
-Available to view at: [michaelbracey.co.uk](https://michaelbracey.co.uk/)
+Available to view at: [michaelbracey.co.uk](https://michaelbracey.co.uk/project1.html)
 
 ## Contact
 Created by [@Mbrace1](https://github.com/Mbrace1)
